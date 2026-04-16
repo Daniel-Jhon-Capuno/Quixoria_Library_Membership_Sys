@@ -1,0 +1,311 @@
+/* LibraryHub Dashboard Theme Variables */
+
+:root {
+    /* Dark mode (default) - Deep ocean aquarium theme */
+    --bg-primary: 10, 20, 35; /* #0a1423 - Deep ocean */
+    --bg-secondary: 15, 35, 55; /* #0f2337 - Darker blue */
+    --surface-primary: 20, 45, 70; /* #142d46 - Ocean surface */
+    --surface-secondary: 10, 25, 45; /* #0a192d - Deep water */
+    --border-primary: 40, 100, 150; /* #286496 - Jellyfish blue */
+    --text-primary: 200, 240, 255; /* #c8f0ff - Light cyan */
+    --text-secondary: 120, 180, 220; /* #78b4dc - Medium cyan */
+    --accent-primary: 0, 255, 200; /* #00ffc8 - Neon aqua */
+    --accent-secondary: 100, 200, 255; /* #64c8ff - Cyan jellyfish */
+    --accent-tertiary: 150, 50, 255; /* #9632ff - Purple jellyfish */
+}
+
+/* Light mode - Light aquarium */
+html.light-mode {
+    --bg-primary: 240, 250, 255; /* #f0fAff - Light cyan background */
+    --bg-secondary: 220, 240, 255; /* #dcf0ff - Lighter cyan */
+    --surface-primary: 200, 230, 255; /* #c8e6ff - Light blue surface */
+    --surface-secondary: 240, 245, 255; /* #f0f5ff - Very light */
+    --border-primary: 100, 150, 200; /* #6496c8 - Medium blue */
+    --text-primary: 20, 60, 100; /* #143c64 - Dark blue */
+    --text-secondary: 60, 100, 140; /* #3c648c - Medium blue */
+    --accent-primary: 0, 200, 150; /* #00c896 - Aqua accent */
+    --accent-secondary: 50, 150, 200; /* #3296c8 - Cyan accent */
+    --accent-tertiary: 100, 50, 150; /* #643296 - Purple accent */
+}
+
+/* LibraryHub Dashboard Styles */
+
+/* Scrollbar Styling */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: rgba(var(--surface-primary) / 0.3);
+}
+
+::-webkit-scrollbar-thumb {
+    background: linear-gradient(to bottom, rgb(var(--accent-secondary)), rgb(var(--accent-primary)));
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(to bottom, rgb(var(--accent-tertiary)), rgb(var(--accent-secondary)));
+}
+
+/* Animations */
+@keyframes slideInFromLeft {
+    from {
+        opacity: 0;
+        transform: translateX(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@keyframes slideInFromRight {
+    from {
+        opacity: 0;
+        transform: translateX(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+.animate-slide-in-left {
+    animation: slideInFromLeft 0.3s ease-out;
+}
+
+.animate-slide-in-right {
+    animation: slideInFromRight 0.3s ease-out;
+}
+
+.animate-fade-in {
+    animation: fadeIn 0.3s ease-out;
+}
+
+/* Smooth Transitions */
+* {
+    @apply transition-colors duration-200;
+}
+
+/* Card Hover Effects */
+.card {
+    @apply transition-all duration-300;
+}
+
+.card:hover {
+    @apply shadow-lg;
+}
+
+/* Theme Variables */
+body {
+    background-color: rgb(var(--bg-primary));
+    color: rgb(var(--text-primary));
+}
+
+/* Responsive Typography */
+@media (max-width: 640px) {
+    h1 {
+        @apply text-2xl;
+    }
+
+    h2 {
+        @apply text-xl;
+    }
+
+    h3 {
+        @apply text-lg;
+    }
+}
+
+/* Sidebar Responsive */
+@media (max-width: 1024px) {
+    .sidebar-wrapper {
+        @apply transform -translate-x-full;
+    }
+
+    .sidebar-wrapper.open {
+        @apply transform translate-x-0;
+    }
+}
+
+/* Form Styling */
+input[type="text"],
+input[type="email"],
+input[type="password"],
+textarea,
+select {
+    background-color: rgb(var(--bg-secondary));
+    border-color: rgb(var(--border-primary));
+    color: rgb(var(--text-primary));
+    @apply rounded-lg text-sm placeholder-slate-500 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/50 transition;
+}
+
+input[type="text"]::placeholder,
+input[type="email"]::placeholder,
+input[type="password"]::placeholder,
+textarea::placeholder {
+    color: rgb(var(--text-secondary));
+    opacity: 0.7;
+}
+
+/* Button Base Styles */
+button:not([class*="bg-"]) {
+    @apply transition-all duration-200;
+}
+
+/* Links */
+a {
+    @apply transition-colors duration-200;
+}
+
+/* Tables */
+table {
+    @apply w-full;
+}
+
+tbody tr {
+    border-bottom-color: rgb(var(--border-primary) / 0.6);
+}
+
+tbody tr:hover {
+    background-color: rgb(var(--bg-secondary) / 0.5);
+}
+
+/* Status Badges */
+.badge-success {
+    @apply bg-success/20 text-green-400;
+}
+
+.badge-danger {
+    @apply bg-danger/20 text-red-400;
+}
+
+.badge-warning {
+    @apply bg-warning/20 text-amber-400;
+}
+
+.badge-info {
+    @apply bg-secondary/20 text-secondary;
+}
+
+/* Alert Styling */
+.alert {
+    @apply rounded-xl p-6 flex items-start gap-4;
+}
+
+.alert-danger {
+    @apply bg-danger/20 border border-danger/50 text-red-300;
+}
+
+.alert-warning {
+    @apply bg-warning/20 border border-warning/50 text-amber-300;
+}
+
+.alert-success {
+    @apply bg-success/20 border border-success/50 text-green-300;
+}
+
+.alert-info {
+    @apply bg-secondary/20 border border-secondary/50 text-cyan-300;
+}
+
+/* Card Shadows */
+.shadow-glow {
+    box-shadow: 0 0 20px rgba(100, 200, 255, 0.1);
+}
+
+.shadow-glow-accent {
+    box-shadow: 0 0 20px rgba(0, 255, 200, 0.1);
+}
+
+/* Gradient Backgrounds */
+.gradient-primary {
+    @apply bg-gradient-to-r from-cyan-400 to-cyan-300;
+}
+
+.gradient-secondary {
+    @apply bg-gradient-to-r from-blue-400 to-cyan-500;
+}
+
+.gradient-accent {
+    @apply bg-gradient-to-r from-purple-400 to-blue-600;
+}
+
+/* Loading States */
+.loading {
+    @apply opacity-50 pointer-events-none cursor-not-allowed;
+}
+
+.spinner {
+    border: 3px solid rgba(200, 240, 255, 0.1);
+    border-top: 3px solid #00ffc8;
+    border-radius: 50%;
+    width: 20px;
+    height: 20px;
+    animation: spin 0.6s linear infinite;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* Responsive Grid */
+@media (max-width: 768px) {
+    .grid-responsive {
+        @apply grid-cols-1;
+    }
+}
+
+@media (min-width: 769px) and (max-width: 1024px) {
+    .grid-responsive {
+        @apply grid-cols-2;
+    }
+}
+
+@media (min-width: 1025px) {
+    .grid-responsive {
+        @apply grid-cols-4;
+    }
+}
+
+/* Chart Container */
+.chart-container {
+    position: relative;
+    height: 300px;
+    margin-bottom: 1rem;
+}
+
+/* Line Clamp */
+.line-clamp-1 {
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 1;
+}
+
+.line-clamp-2 {
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+}
+
+.line-clamp-3 {
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 3;
+}
