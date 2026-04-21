@@ -55,7 +55,14 @@
 
                     <div class="mt-6 flex items-center justify-between">
                         <a href="{{ route('admin.users.index') }}" class="text-gray-600 hover:text-gray-900">Back</a>
-                        <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">Update User</button>
+                        <div class="flex items-center gap-3">
+                            <form method="POST" action="{{ route('admin.subscriptions.quick-fix', $user) }}" class="inline-block">
+                                @csrf
+                                <input type="hidden" name="extend_days" value="30">
+                                <button type="button" data-admin-confirm="Activate or extend subscription for {{ addslashes($user->name) }}?" class="px-3 py-2 bg-green-600 text-white rounded-md">Quick Fix Sub</button>
+                            </form>
+                            <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">Update User</button>
+                        </div>
                     </div>
                 </form>
             </div>

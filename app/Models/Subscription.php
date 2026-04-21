@@ -16,6 +16,7 @@ class Subscription extends Model
         'amount_paid',
     ];
 
+    // This part is critical for the date math to work
     protected $casts = [
         'starts_at' => 'datetime',
         'ends_at' => 'datetime',

@@ -8,6 +8,29 @@
         </div>
     </x-slot>
 
+    {{-- Flash messages --}}
+    @if(session('success'))
+        <div class="rounded-xl p-4 mb-6" style="background-color: rgba(34,197,94,0.08); border: 1px solid rgba(34,197,94,0.2); color: rgb(var(--text-primary));">
+            {{ session('success') }}
+        </div>
+    @endif
+
+    @if(session('error'))
+        <div class="rounded-xl p-4 mb-6" style="background-color: rgba(239,68,68,0.06); border: 1px solid rgba(239,68,68,0.18); color: rgb(var(--text-primary));">
+            {{ session('error') }}
+        </div>
+    @endif
+
+    @if($errors->any())
+        <div class="rounded-xl p-4 mb-6" style="background-color: rgba(245,158,11,0.06); border: 1px solid rgba(245,158,11,0.18); color: rgb(var(--text-primary));">
+            <ul class="list-disc pl-5"> 
+                @foreach($errors->all() as $err)
+                    <li>{{ $err }}</li>
+                @endforeach
+            </ul>
+        </div>
+    @endif
+
     <!-- Priority Stats -->
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         <x-stat-card 
@@ -66,7 +89,7 @@
                                 <td class="py-3 px-4">
                                     <form method="POST" action="{{ route('staff.deadline-dashboard.ping', $borrow->id) }}" style="display: inline;">
                                         @csrf
-                                        <button type="submit" class="text-primary hover:text-primary-dark transition text-sm font-medium">Send Reminder</button>
+                                        <button type="submit" data-confirm="Send reminder to this student?" class="text-primary hover:text-primary-dark transition text-sm font-medium">Send Reminder</button>
                                     </form>
                                 </td>
                             </tr>
@@ -101,17 +124,9 @@
                                     <td class="py-3 px-4"><span class="bg-accent/20 text-accent px-2 py-1 rounded text-xs font-medium">{{ $request->user->subscription->membershipTier->name ?? 'None' }}</span></td>
                                     <td class="py-3 px-4" style="color: rgb(var(--text-secondary));">{{ $request->book->title ?? 'N/A' }}</td>
                                     <td class="py-3 px-4 flex gap-2">
-                                        <form method="POST" action="{{ route('staff.borrow-requests.confirm', $request->id) }}" style="display: inline;">
-                                            @csrf
-                                            <button type="submit" class="text-secondary hover:text-secondary/80 transition text-sm font-medium">Approve</button>
-                                        </form>
+                                        <a href="{{ route('staff.borrow-requests.confirm.form', $request->id) }}" class="text-secondary hover:text-secondary/80 transition text-sm font-medium">Approve</a>
                                         <span style="color: rgb(var(--text-secondary));">|</span>
-                                        <form method="POST" action="{{ route('staff.borrow-requests.reject', $request->id) }}" style="display: inline;">
-                                            @csrf
-                                            @method('POST')
-                                            <input type="hidden" name="rejection_reason" value="Request rejected by staff">
-                                            <button type="submit" class="text-danger hover:text-red-500 transition text-sm font-medium" onclick="return confirm('Are you sure you want to reject this request?')">Reject</button>
-                                        </form>
+                                        <a href="{{ route('staff.borrow-requests.reject.form', $request->id) }}" class="text-danger hover:text-red-500 transition text-sm font-medium">Reject</a>
                                     </td>
                                 </tr>
                             @empty

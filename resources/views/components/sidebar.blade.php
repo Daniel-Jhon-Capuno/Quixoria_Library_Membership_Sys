@@ -35,6 +35,7 @@
             <x-sidebar-link href="{{ route('student.book-catalog.index') }}" icon="book-open" label="Browse Books" />
             <x-sidebar-link href="{{ route('student.active-borrows.index') }}" icon="inbox" label="My Borrows" />
             <x-sidebar-link href="{{ route('student.subscription.index') }}" icon="star" label="My Subscription" />
+            <x-sidebar-link href="{{ route('student.receipts.index') }}" icon="document-text" label="Receipts" />
         @endif
     </nav>
 

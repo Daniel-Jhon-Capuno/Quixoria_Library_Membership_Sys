@@ -68,12 +68,12 @@
         <div class="space-y-4">
             <x-stat-card 
                 title="My Borrows" 
-                value="{{ $activeBorrows ?? 0 }}"
+                value="{{ count($activeBorrows ?? []) }}"
                 subtitle="Currently borrowed" 
                 color="secondary" />
             <x-stat-card 
                 title="Reservations" 
-                value="{{ $reservations ?? 0 }}"
+                value="{{ count($reservations ?? []) }}"
                 subtitle="Pending books" 
                 color="accent" />
         </div>
@@ -110,9 +110,10 @@
                                         @endif
                                     </div>
                                 </div>
-                                <button class="px-3 py-2 rounded transition text-sm font-medium bg-primary/20 hover:bg-primary/30 text-primary">
-                                    Renew
-                                </button>
+                                <form method="POST" action="{{ route('student.active-borrows.renew', $borrow->id) }}" class="inline" onsubmit="return confirm('Renew this book?');">
+                                    @csrf
+                                    <button type="submit" class="px-3 py-2 rounded transition text-sm font-medium bg-primary/20 hover:bg-primary/30 text-primary">Renew</button>
+                                </form>
                             </div>
                         @endforeach
                     </div>

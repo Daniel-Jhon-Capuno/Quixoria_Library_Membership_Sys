@@ -37,6 +37,9 @@
                         <x-nav-link :href="route('student.book-catalog.index')" :active="request()->routeIs('student.book-catalog.*')">
                             {{ __('Books') }}
                         </x-nav-link>
+                        <x-nav-link :href="route('student.receipts.index')" :active="request()->routeIs('student.receipts.*')">
+                            {{ __('Receipts') }}
+                        </x-nav-link>
                         <x-nav-link :href="route('student.active-borrows.index')" :active="request()->routeIs('student.active-borrows.*')">
                             {{ __('My Books') }}
                         </x-nav-link>
@@ -70,6 +73,12 @@
                         <x-dropdown-link :href="route('profile.edit')">
                             {{ __('Profile') }}
                         </x-dropdown-link>
+
+                        @if(auth()->user()->role === 'student')
+                            <x-dropdown-link :href="route('student.receipts.index')">
+                                {{ __('Receipts') }}
+                            </x-dropdown-link>
+                        @endif
 
                         <form method="POST" action="{{ route('logout') }}">
                             @csrf
@@ -105,6 +114,9 @@
                 <x-responsive-nav-link :href="route('student.book-catalog.index')" :active="request()->routeIs('student.book-catalog.*')">
                     {{ __('Books') }}
                 </x-responsive-nav-link>
+                    <x-responsive-nav-link :href="route('student.receipts.index')" :active="request()->routeIs('student.receipts.*')">
+                        {{ __('Receipts') }}
+                    </x-responsive-nav-link>
                 <x-responsive-nav-link :href="route('student.active-borrows.index')" :active="request()->routeIs('student.active-borrows.*')">
                     {{ __('My Books') }}
                 </x-responsive-nav-link>

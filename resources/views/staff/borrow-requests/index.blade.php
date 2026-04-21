@@ -14,11 +14,10 @@
                             <select name="status" id="status" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
                                 <option value="">All Statuses</option>
                                 <option value="pending" {{ request('status') == 'pending' ? 'selected' : '' }}>Pending</option>
-                                <option value="confirmed" {{ request('status') == 'confirmed' ? 'selected' : '' }}>Confirmed</option>
-                                <option value="rejected" {{ request('status') == 'rejected' ? 'selected' : '' }}>Rejected</option>
                                 <option value="active" {{ request('status') == 'active' ? 'selected' : '' }}>Active</option>
                                 <option value="returned" {{ request('status') == 'returned' ? 'selected' : '' }}>Returned</option>
                                 <option value="overdue" {{ request('status') == 'overdue' ? 'selected' : '' }}>Overdue</option>
+                                <option value="rejected" {{ request('status') == 'rejected' ? 'selected' : '' }}>Rejected</option>
                             </select>
                         </div>
                         <div>
@@ -64,11 +63,10 @@
                                     <td class="px-6 py-4 whitespace-nowrap">
                                         <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full
                                             @if($request->status == 'pending') bg-yellow-100 text-yellow-800
-                                            @elseif($request->status == 'confirmed') bg-blue-100 text-blue-800
-                                            @elseif($request->status == 'rejected') bg-red-100 text-red-800
                                             @elseif($request->status == 'active') bg-green-100 text-green-800
                                             @elseif($request->status == 'returned') bg-gray-100 text-gray-800
                                             @elseif($request->status == 'overdue') bg-red-100 text-red-800
+                                            @elseif($request->status == 'rejected') bg-red-100 text-red-800
                                             @else bg-gray-100 text-gray-800 @endif">
                                             {{ ucfirst($request->status) }}
                                         </span>
@@ -91,14 +89,14 @@
                                         <div class="flex space-x-2">
                                             <form method="POST" action="{{ route('staff.borrow-requests.confirm', $request->id) }}" class="inline">
                                                 @csrf
-                                                <button type="submit" class="text-green-600 hover:text-green-900" onclick="return confirm('Confirm this borrow request?')">Confirm</button>
+                                                <button type="submit" data-confirm="Confirm this borrow request?" class="text-green-600 hover:text-green-900">Confirm</button>
                                             </form>
                                             <button type="button" class="text-red-600 hover:text-red-900" onclick="openRejectModal({{ $request->id }})">Reject</button>
                                         </div>
                                         @elseif(in_array($request->status, ['active', 'overdue']))
                                         <form method="POST" action="{{ route('staff.borrow-requests.check-in', $request->id) }}" class="inline">
                                             @csrf
-                                            <button type="submit" class="text-blue-600 hover:text-blue-900" onclick="return confirm('Check in this book?')">Check In</button>
+                                            <button type="submit" data-confirm="Check in this book?" class="text-blue-600 hover:text-blue-900">Check In</button>
                                         </form>
                                         @else
                                         <span class="text-gray-400">-</span>

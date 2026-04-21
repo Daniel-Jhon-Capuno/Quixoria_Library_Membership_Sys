@@ -42,9 +42,10 @@ class StaffNewRequestNotification extends Notification implements ShouldQueue
         return (new MailMessage)
             ->subject('New Book Borrow Request')
             ->greeting("Hello {$notifiable->name}!")
-            ->line("A new borrow request has been submitted by {$borrowRequest->student->name}.")
+            ->line("A new borrow request has been submitted by {$borrowRequest->student->name} (ID: {$borrowRequest->student->id}).")
             ->line("**Request Details:**")
             ->line("- Student: {$borrowRequest->student->name} ({$borrowRequest->student->email})")
+            ->line("- Student ID: {$borrowRequest->student->id}")
             ->line("- Book: {$borrowRequest->book->title}")
             ->line("- Author: {$borrowRequest->book->author}")
             ->line("- Requested: {$borrowRequest->created_at->format('M j, Y g:i A')}")
@@ -63,9 +64,10 @@ class StaffNewRequestNotification extends Notification implements ShouldQueue
         return [
             'borrow_request_id' => $this->borrowRequest->id,
             'student_name' => $this->borrowRequest->student->name,
+            'student_id' => $this->borrowRequest->student->id,
             'book_title' => $this->borrowRequest->book->title,
-            'message' => 'New borrow request submitted',
-            'action_url' => '/staff/borrow-requests',
+            'message' => 'New borrow request submitted by ' . $this->borrowRequest->student->name . ' (ID: ' . $this->borrowRequest->student->id . ')',
+            'action_url' => route('staff.borrow-requests.index'),
         ];
     }
 }

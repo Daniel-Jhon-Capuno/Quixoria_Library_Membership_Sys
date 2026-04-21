@@ -9,28 +9,20 @@ use App\Models\Transaction;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Carbon\Carbon;
 
 class SubscriptionController extends Controller
 {
-    /**
-     * Display a listing of subscriptions with status filter.
-     */
     public function index(Request $request)
     {
         $query = Subscription::with(['user', 'membershipTier']);
-
         if ($request->filled('status')) {
             $query->where('status', $request->status);
         }
-
         $subscriptions = $query->orderBy('created_at', 'desc')->paginate(15)->withQueryString();
-
         return view('admin.subscriptions.index', compact('subscriptions'));
     }
 
-    /**
-     * Display the specified subscription with payment history.
-     */
     public function show(Subscription $subscription)
     {
         $subscription->load(['user', 'membershipTier']);
@@ -38,13 +30,9 @@ class SubscriptionController extends Controller
             ->with('processor')
             ->orderBy('created_at', 'desc')
             ->get();
-
         return view('admin.subscriptions.show', compact('subscription', 'transactions'));
     }
 
-    /**
-     * Manually assign a tier to a student.
-     */
     public function override(Request $request, User $user)
     {
         $data = $request->validate([
@@ -55,12 +43,10 @@ class SubscriptionController extends Controller
         ]);
 
         DB::transaction(function () use ($user, $data) {
-            // Cancel any existing active subscription
             Subscription::where('user_id', $user->id)
                 ->where('status', 'active')
                 ->update(['status' => 'cancelled', 'cancelled_at' => now()]);
 
-            // Create new subscription
             $subscription = Subscription::create([
                 'user_id' => $user->id,
                 'membership_tier_id' => $data['membership_tier_id'],
@@ -70,7 +56,6 @@ class SubscriptionController extends Controller
                 'amount_paid' => $data['amount_paid'],
             ]);
 
-            // Create transaction record
             Transaction::create([
                 'user_id' => $user->id,
                 'subscription_id' => $subscription->id,
@@ -81,12 +66,9 @@ class SubscriptionController extends Controller
             ]);
         });
 
-        return redirect()->route('admin.subscriptions.index')->with('success', 'Subscription created and tier assigned successfully.');
+        return redirect()->route('admin.subscriptions.index')->with('success', 'Subscription created.');
     }
 
-    /**
-     * Issue manual refund/credit with required reason field.
-     */
     public function adjust(Request $request, Subscription $subscription)
     {
         $data = $request->validate([
@@ -104,6 +86,42 @@ class SubscriptionController extends Controller
             'processed_by' => auth()->id(),
         ]);
 
-        return redirect()->route('admin.subscriptions.show', $subscription)->with('success', ucfirst($data['type']) . ' recorded successfully.');
+        return redirect()->route('admin.subscriptions.show', $subscription)->with('success', 'Adjustment saved.');
+    }
+
+    public function quickFix(Request $request, User $user)
+    {
+        $days = (int) ($request->input('extend_days') ?: 30);
+
+        try {
+            DB::transaction(function () use ($user, $days) {
+                $subscription = Subscription::where('user_id', $user->id)
+                    ->where('status', 'active')
+                    ->first();
+
+                if ($subscription) {
+                    $baseDate = ($subscription->ends_at && $subscription->ends_at->isFuture()) 
+                        ? $subscription->ends_at 
+                        : now();
+
+                    $subscription->ends_at = $baseDate->addDays($days);
+                    $subscription->save();
+                } else {
+                    $tier = MembershipTier::where('is_active', true)->first() ?? MembershipTier::first();
+                    Subscription::create([
+                        'user_id' => $user->id,
+                        'membership_tier_id' => $tier->id ?? null,
+                        'status' => 'active',
+                        'starts_at' => now(),
+                        'ends_at' => now()->addDays($days),
+                        'amount_paid' => 0,
+                    ]);
+                }
+            });
+
+            return back()->with('success', "Subscription updated: +{$days} days.");
+        } catch (\Exception $e) {
+            return back()->withErrors(['error' => 'Fix failed: ' . $e->getMessage()]);
+        }
     }
 }

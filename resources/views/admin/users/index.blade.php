@@ -67,6 +67,11 @@
                                         @csrf
                                         <button type="submit" class="text-indigo-600 hover:text-indigo-900">Reset Password</button>
                                     </form>
+                                    <form action="{{ route('admin.subscriptions.quick-fix', $user) }}" method="POST" class="inline-block">
+                                        @csrf
+                                        <input type="hidden" name="extend_days" value="30">
+                                        <button type="button" data-admin-confirm="Activate or extend subscription for {{ addslashes($user->name) }}?" class="text-green-600 hover:text-green-900">Quick Fix Sub</button>
+                                    </form>
                                 </td>
                             </tr>
                         @endforeach

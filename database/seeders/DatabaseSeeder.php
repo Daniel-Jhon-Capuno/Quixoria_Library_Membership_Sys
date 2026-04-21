@@ -8,6 +8,7 @@ use Illuminate\Database\Seeder;
 use Database\Seeders\MembershipTierSeeder;
 use Database\Seeders\AdminUserSeeder;
 use Database\Seeders\StaffUserSeeder;
+use Database\Seeders\StudentUserSeeder;
 use Database\Seeders\BookSeeder;
 
 class DatabaseSeeder extends Seeder
@@ -23,6 +24,7 @@ class DatabaseSeeder extends Seeder
             MembershipTierSeeder::class,
             AdminUserSeeder::class,
             StaffUserSeeder::class,
+            StudentUserSeeder::class,
             BookSeeder::class,
         ]);
     }

@@ -4,6 +4,23 @@
     </x-slot>
 
     <div class="py-12">
+        @if(auth()->check())
+            <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 mb-4">
+                @if(auth()->user()->subscription)
+                    @if(isset($monthlyBorrows, $monthlyLimit) && $monthlyLimit && $monthlyBorrows >= $monthlyLimit)
+                        <div class="mb-4 p-4 bg-red-50 border border-red-200 text-red-800 rounded-md">You have reached your monthly borrow limit of {{ $monthlyLimit }} books.</div>
+                    @endif
+                    <div class="bg-green-50 border-l-4 border-green-400 p-3 text-sm text-green-800 rounded">
+                        You have an active subscription until {{ auth()->user()->subscription->ends_at->format('M j, Y') }}.
+                    </div>
+                @else
+                    <div class="bg-yellow-50 border-l-4 border-yellow-400 p-3 text-sm text-yellow-800 rounded">
+                        You do not have an active subscription. You may not be able to borrow books.
+                        <a href="{{ route('student.subscription.index') }}" class="ml-1 text-blue-600 underline">Subscribe</a>
+                    </div>
+                @endif
+            </div>
+        @endif
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 <!-- Book Cover and Actions -->
@@ -44,16 +61,28 @@
 
                             <!-- Action Buttons -->
                             <div class="space-y-3">
+                                @php
+                                    $atWeeklyLimit = isset($weeklyBorrows, $tierLimit) && $weeklyBorrows >= $tierLimit;
+                                @endphp
+
+                                @if($atWeeklyLimit)
+                                    <div class="w-full px-4 py-3 bg-yellow-50 border-l-4 border-yellow-400 text-sm text-yellow-800 rounded">
+                                        You have reached your weekly borrow limit ({{ $weeklyBorrows }}/{{ $tierLimit }}). You cannot borrow additional books this week.
+                                    </div>
+                                @endif
+
                                 @if($hasActiveRequest)
                                     <div class="w-full px-4 py-2 bg-gray-300 border border-transparent rounded-md text-sm font-medium text-gray-700 text-center cursor-not-allowed">
                                         Request Already Exists
                                     </div>
                                 @else
-                                    @if($canBorrow && $availableCopies > 0)
-                                        <a href="{{ route('student.borrow-requests.store', $book->id) }}"
-                                           class="w-full inline-flex justify-center items-center px-4 py-2 bg-blue-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-blue-700 text-center">
-                                            Borrow This Book
-                                        </a>
+                                    @if(!$atWeeklyLimit && $canBorrow && $availableCopies > 0)
+                                        <form method="POST" action="{{ route('student.borrow-requests.store', $book->id) }}">
+                                            @csrf
+                                            <button type="submit" data-confirm="Are you sure you want to borrow this book?" class="w-full inline-flex justify-center items-center px-4 py-2 bg-blue-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-blue-700">
+                                                Borrow This Book
+                                            </button>
+                                        </form>
                                     @elseif(!$canBorrow)
                                         <div class="w-full px-4 py-2 bg-gray-300 border border-transparent rounded-md text-sm font-medium text-gray-700 text-center cursor-not-allowed"
                                              title="{{ $borrowDisabledReason }}">
@@ -158,6 +187,21 @@
                                     </div>
 
                                     @if(auth()->check())
+                                        <div class="mb-4 p-3 rounded-md bg-gray-100 text-sm text-gray-700">
+                                            <strong>Subscription:</strong>
+                                            @if(auth()->user()->subscription)
+                                                {{ ucfirst(auth()->user()->subscription->status) }} — valid until {{ auth()->user()->subscription->ends_at->format('M j, Y') }}
+                                                <a href="{{ route('student.subscription.index') }}" class="ml-2 text-blue-600">Manage</a>
+                                                @if(auth()->check() && auth()->user()->role === 'admin')
+                                                    <form method="POST" action="{{ route('admin.subscriptions.quick-fix', auth()->user()->id) }}" class="inline-block ml-3">
+                                                        @csrf
+                                                        <button type="button" data-admin-confirm="Activate or extend subscription for {{ addslashes(auth()->user()->name) }}?" class="inline-flex items-center px-3 py-1 bg-gray-800 text-white text-xs rounded">Admin Quick Fix</button>
+                                                    </form>
+                                                @endif
+                                            @else
+                                                None <a href="{{ route('student.subscription.index') }}" class="ml-2 text-blue-600">Subscribe</a>
+                                            @endif
+                                        </div>
                                         <div class="bg-gray-50 p-4 rounded-lg">
                                             <h5 class="font-medium text-gray-900 mb-2">Your Status</h5>
                                             <ul class="text-sm text-gray-600 space-y-1">
@@ -166,6 +210,10 @@
                                                 @else
                                                     <li class="text-red-600">✗ {{ $borrowDisabledReason }}</li>
                                                 @endif
+
+                                                        @if(isset($weeklyBorrows, $tierLimit))
+                                                            <li class="text-sm text-gray-700">{{ $weeklyBorrows }} of {{ $tierLimit }} used this week</li>
+                                                        @endif
 
                                                 @if($canReserve)
                                                     <li class="text-green-600">✓ Can make reservations</li>

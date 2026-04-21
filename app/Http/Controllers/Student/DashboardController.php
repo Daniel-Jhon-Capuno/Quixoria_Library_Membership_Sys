@@ -18,14 +18,14 @@ class DashboardController extends Controller
 
         // Get active borrows with countdown
         $activeBorrows = BorrowRequest::where('user_id', $user->id)
-            ->where('status', 'approved')
+            ->whereIn('status', ['active', 'overdue'])
             ->with('book')
             ->latest('due_at')
             ->get();
 
         // Get overdue borrows
         $overdueBorrows = BorrowRequest::where('user_id', $user->id)
-            ->where('status', 'approved')
+            ->whereIn('status', ['active', 'overdue'])
             ->where('due_at', '<', now())
             ->with('book')
             ->get();

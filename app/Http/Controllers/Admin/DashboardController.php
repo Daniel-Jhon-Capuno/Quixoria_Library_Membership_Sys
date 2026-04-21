@@ -1,5 +1,4 @@
 <?php
-
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
@@ -44,7 +43,7 @@ class DashboardController extends Controller
         $pendingRequests = BorrowRequest::where('status', 'pending')->count();
 
         // Overdue borrows count
-        $overdueBorrows = BorrowRequest::where('status', 'approved')
+        $overdueBorrows = BorrowRequest::where('status', 'active')
             ->where('due_at', '<', now())
             ->count();
 

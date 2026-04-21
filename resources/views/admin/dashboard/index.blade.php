@@ -233,7 +233,7 @@
                             <td class="py-3 px-4" style="color: rgb(var(--text-secondary));">{{ $request->book->title ?? 'N/A' }}</td>
                             <td class="text-sm py-3 px-4" style="color: rgb(var(--text-secondary));">{{ $request->created_at->format('M d') ?? 'N/A' }}</td>
                             <td class="py-3 px-4">
-                                <span class="@if($request->status === 'approved') bg-secondary/20 text-secondary @elseif($request->status === 'pending') bg-accent/20 text-accent @else bg-danger/20 text-red-400 @endif px-2 py-1 rounded text-xs font-medium">
+                                <span class="@if($request->status === 'active') bg-secondary/20 text-secondary @elseif($request->status === 'pending') bg-accent/20 text-accent @else bg-danger/20 text-red-400 @endif px-2 py-1 rounded text-xs font-medium">
                                     {{ ucfirst($request->status ?? 'Unknown') }}
                                 </span>
                             </td>

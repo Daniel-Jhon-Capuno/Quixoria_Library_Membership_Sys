@@ -2,21 +2,25 @@
 
 namespace App\Notifications;
 
+use App\Models\BorrowRequest;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
+use Illuminate\Support\Facades\Log;
 
 class BorrowRequestConfirmedNotification extends Notification implements ShouldQueue
 {
     use Queueable;
 
+    protected $borrowRequest;
+
     /**
      * Create a new notification instance.
      */
-    public function __construct()
+    public function __construct(BorrowRequest $borrowRequest)
     {
-        //
+        $this->borrowRequest = $borrowRequest;
     }
 
     /**
@@ -34,13 +38,29 @@ class BorrowRequestConfirmedNotification extends Notification implements ShouldQ
      */
     public function toMail(object $notifiable): MailMessage
     {
-        return (new MailMessage)
-            ->subject('Borrow Request Confirmed')
-            ->greeting('Good news!')
-            ->line('Your borrow request has been confirmed by our staff.')
+        $mail = (new MailMessage)
+            ->subject('Borrow Request Confirmed - ' . $this->borrowRequest->book->title)
+            ->greeting('Good news, ' . $notifiable->name . '!')
+            ->line('Your borrow request for "' . $this->borrowRequest->book->title . '" has been confirmed by our staff.')
             ->line('You can now pick up your book from the library.')
-            ->action('View My Books', url('/active-borrows'))
+            ->line('Due Date: ' . $this->borrowRequest->due_at->format('M j, Y'))
+            ->action('View Receipt', route('student.borrow-requests.receipt', $this->borrowRequest->id))
+            ->action('View My Books', url('/student/active-borrows'))
             ->line('Thank you for using our library system!');
+
+        // Attach PDF receipt if dompdf package is installed
+        try {
+            if (class_exists(\Barryvdh\DomPDF\Facade\Pdf::class)) {
+                $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('student.borrow-requests.receipt', ['borrowRequest' => $this->borrowRequest]);
+                $mail->attachData($pdf->output(), 'receipt-' . $this->borrowRequest->id . '.pdf', [
+                    'mime' => 'application/pdf',
+                ]);
+            }
+        } catch (\Throwable $e) {
+            Log::warning('Failed to generate or attach receipt PDF', ['exception' => $e->getMessage(), 'borrow_request_id' => $this->borrowRequest->id]);
+        }
+
+        return $mail;
     }
 
     /**
@@ -52,10 +72,12 @@ class BorrowRequestConfirmedNotification extends Notification implements ShouldQ
     {
         return [
             'title' => 'Borrow Request Confirmed',
-            'message' => 'Your borrow request has been confirmed. You can now pick up your book from the library.',
-            'action_url' => url('/active-borrows'),
-            'action_text' => 'View My Books',
+            'message' => 'Your borrow request for "' . $this->borrowRequest->book->title . '" has been confirmed.',
+            'action_url' => route('student.borrow-requests.receipt', $this->borrowRequest->id),
+            'action_text' => 'View Receipt',
             'type' => 'borrow_request_confirmed',
+            'borrow_request_id' => $this->borrowRequest->id,
+            'receipt_url' => route('student.borrow-requests.receipt', $this->borrowRequest->id),
         ];
     }
 }

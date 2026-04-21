@@ -55,39 +55,8 @@
                             <!-- Theme Switcher -->
                             <x-theme-switcher />
 
-                            <!-- Notifications Dropdown -->
-                            <div class="relative" x-data="{ notificationOpen: false }">
-                                <button @click="notificationOpen = !notificationOpen" 
-                                        class="relative p-2 transition hover:opacity-80"
-                                        style="color: rgb(var(--text-secondary));">
-                                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path>
-                                    </svg>
-                                    <span class="absolute top-1 right-1 w-2 h-2 bg-cyan-400 rounded-full"></span>
-                                </button>
-                                <div x-show="notificationOpen"
-                                     @click.away="notificationOpen = false"
-                                     style="background-color: rgb(var(--surface-primary)); border-color: rgb(var(--border-primary)); color: rgb(var(--text-primary));"
-                                     class="absolute right-0 mt-2 w-64 rounded-lg shadow-lg border z-50 overflow-hidden">
-                                    <div class="p-4 border-b" style="border-color: rgb(var(--border-primary));">
-                                        <h3 class="font-semibold text-sm">Notifications</h3>
-                                    </div>
-                                    <div class="max-h-96 overflow-y-auto">
-                                        <div class="p-4 hover:opacity-80 transition cursor-pointer" style="background-color: rgb(var(--bg-secondary));">
-                                            <p class="text-sm font-medium">New book added</p>
-                                            <p class="text-xs mt-1" style="color: rgb(var(--text-secondary));">2 hours ago</p>
-                                        </div>
-                                        <div class="p-4 hover:opacity-80 transition cursor-pointer" style="background-color: rgb(var(--bg-secondary));">
-                                            <p class="text-sm font-medium">Borrow request approved</p>
-                                            <p class="text-xs mt-1" style="color: rgb(var(--text-secondary));">5 hours ago</p>
-                                        </div>
-                                        <div class="p-4 hover:opacity-80 transition cursor-pointer" style="background-color: rgb(var(--bg-secondary));">
-                                            <p class="text-sm font-medium">Your subscription expires soon</p>
-                                            <p class="text-xs mt-1" style="color: rgb(var(--text-secondary));">1 day ago</p>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
+                            <!-- Notifications Dropdown (DB-driven) -->
+                            @include('partials.notifications')
 
                             <!-- Settings Dropdown -->
                             <div class="relative" x-data="{ settingsOpen: false }">
@@ -127,6 +96,12 @@
 
                 <!-- Page Content -->
                 <main class="flex-1 px-6 py-8">
+                    @if(session('success'))
+                        <div class="mb-4 p-4 bg-green-100 border border-green-200 text-green-800 rounded-md">{{ session('success') }}</div>
+                    @endif
+                    @if(session('error'))
+                        <div class="mb-4 p-4 bg-red-100 border border-red-200 text-red-800 rounded-md">{{ session('error') }}</div>
+                    @endif
                     {{ $slot }}
                 </main>
 
@@ -145,6 +120,78 @@
         </div>
 
         <!-- Mobile Menu Toggle Script -->
+        <script>
+            // Simple confirm popups for elements with data-confirm (non-admin)
+            document.addEventListener('click', function(e) {
+                const el = e.target.closest('[data-confirm]');
+                if (!el) return;
+                const msg = el.getAttribute('data-confirm') || 'Are you sure?';
+                if (!confirm(msg)) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                }
+            }, true);
+        </script>
+
+        <!-- Admin confirmation modal (for admin-only destructive/quick-fix actions) -->
+        <div id="admin-confirm-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+            <div class="bg-white rounded-lg shadow-lg w-full max-w-lg p-6">
+                <h3 class="text-lg font-medium text-gray-900 mb-2">Confirm Action</h3>
+                <p id="admin-confirm-message" class="text-sm text-gray-700 mb-4">Are you sure?</p>
+                <div class="flex justify-end space-x-2">
+                    <button id="admin-confirm-cancel" class="px-4 py-2 bg-gray-200 rounded">Cancel</button>
+                    <button id="admin-confirm-accept" class="px-4 py-2 bg-red-600 text-white rounded">Confirm</button>
+                </div>
+            </div>
+        </div>
+
+        <script>
+            (function(){
+                let pendingForm = null;
+                let pendingEl = null;
+                const modal = document.getElementById('admin-confirm-modal');
+                const msgEl = document.getElementById('admin-confirm-message');
+                const btnCancel = document.getElementById('admin-confirm-cancel');
+                const btnAccept = document.getElementById('admin-confirm-accept');
+
+                document.addEventListener('click', function(e) {
+                    const el = e.target.closest('[data-admin-confirm]');
+                    if (!el) return;
+                    e.preventDefault();
+                    e.stopPropagation();
+
+                    const message = el.getAttribute('data-admin-confirm') || 'Are you sure?';
+                    const form = el.closest('form');
+                    pendingForm = form;
+                    pendingEl = el;
+                    msgEl.textContent = message;
+                    modal.classList.remove('hidden');
+                }, true);
+
+                btnCancel.addEventListener('click', function() {
+                    pendingForm = null;
+                    modal.classList.add('hidden');
+                });
+
+                btnAccept.addEventListener('click', function() {
+                    if (pendingForm) {
+                        pendingForm.submit();
+                    } else if (pendingEl) {
+                        // If the element is a link, navigate to its href
+                        if (pendingEl.tagName && pendingEl.tagName.toLowerCase() === 'a' && pendingEl.getAttribute('href')) {
+                            window.location.href = pendingEl.getAttribute('href');
+                        } else {
+                            // Fallback: if element has data-href or data-url, navigate
+                            const h = pendingEl.getAttribute('data-href') || pendingEl.getAttribute('data-url') || pendingEl.getAttribute('href');
+                            if (h) window.location.href = h;
+                        }
+                    }
+                    pendingForm = null;
+                    pendingEl = null;
+                    modal.classList.add('hidden');
+                });
+            })();
+        </script>
         <script>
             // Theme initialization
             document.addEventListener('DOMContentLoaded', function() {

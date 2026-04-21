@@ -17,7 +17,7 @@ class BookController extends Controller
     public function index()
     {
         $books = Book::withCount(['borrowRequests' => function ($query) {
-            $query->whereIn('status', ['active', 'confirmed']);
+            $query->whereIn('status', ['active', 'overdue']);
         }])->get()->map(function ($book) {
             $book->available_copies = $book->total_copies - $book->borrow_requests_count;
             return $book;

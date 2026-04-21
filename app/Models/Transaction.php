@@ -9,8 +9,10 @@ class Transaction extends Model
     protected $fillable = [
         'user_id',
         'subscription_id',
+        'borrow_request_id',
         'type',
         'amount',
+        'description',
         'reference_note',
         'processed_by',
     ];
@@ -23,6 +25,11 @@ class Transaction extends Model
     public function subscription()
     {
         return $this->belongsTo(Subscription::class);
+    }
+
+    public function borrowRequest()
+    {
+        return $this->belongsTo(BorrowRequest::class);
     }
 
     public function processor()

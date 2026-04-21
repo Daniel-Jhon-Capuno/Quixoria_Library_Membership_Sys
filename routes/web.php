@@ -46,6 +46,8 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::resource('subscriptions', SubscriptionController::class)->only(['index', 'show']);
     Route::post('subscriptions/override/{user}', [SubscriptionController::class, 'override'])
         ->name('subscriptions.override');
+    Route::post('subscriptions/quick-fix/{user}', [SubscriptionController::class, 'quickFix'])
+        ->name('subscriptions.quick-fix');
     Route::post('subscriptions/adjust/{subscription}', [SubscriptionController::class, 'adjust'])
         ->name('subscriptions.adjust');
     Route::get('reports', [ReportController::class, 'index'])->name('reports.index');
@@ -60,21 +62,28 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
 Route::middleware(['auth', 'role:staff'])->prefix('staff')->name('staff.')->group(function () {
     Route::get('dashboard', [\App\Http\Controllers\Staff\DashboardController::class, 'index'])->name('dashboard.index');
     Route::get('borrow-requests', [StaffBorrowRequestController::class, 'index'])->name('borrow-requests.index');
+    Route::get('borrow-requests/{id}/receipt', [StaffBorrowRequestController::class, 'downloadReceipt'])->name('borrow-requests.receipt');
     Route::post('borrow-requests/{id}/confirm', [StaffBorrowRequestController::class, 'confirm'])->name('borrow-requests.confirm');
+    Route::get('borrow-requests/{id}/confirm', [StaffBorrowRequestController::class, 'showConfirm'])->name('borrow-requests.confirm.form');
     Route::post('borrow-requests/{id}/reject', [StaffBorrowRequestController::class, 'reject'])->name('borrow-requests.reject');
+    Route::get('borrow-requests/{id}/reject', [StaffBorrowRequestController::class, 'showReject'])->name('borrow-requests.reject.form');
     Route::post('borrow-requests/{id}/check-in', [StaffBorrowRequestController::class, 'checkIn'])->name('borrow-requests.check-in');
     Route::get('deadline-dashboard', [DeadlineDashboardController::class, 'index'])->name('deadline-dashboard.index');
     Route::post('deadline-dashboard/ping/{borrowRequestId}', [DeadlineDashboardController::class, 'ping'])->name('deadline-dashboard.ping');
     Route::get('students/{student}', [UserController::class, 'show'])->name('students.show');
+    Route::get('notifications/{id}/go', [\App\Http\Controllers\Staff\NotificationController::class, 'go'])->name('notifications.go');
 });
 
 Route::middleware(['auth', 'role:student'])->prefix('student')->name('student.')->group(function () {
     Route::get('dashboard', [StudentDashboardController::class, 'index'])->name('dashboard.index');
     Route::get('books', [BookCatalogController::class, 'index'])->name('book-catalog.index');
     Route::get('books/{id}', [BookCatalogController::class, 'show'])->name('book-catalog.show');
+    Route::get('borrow-usage', [BookCatalogController::class, 'usage'])->name('borrow-usage');
     Route::get('borrow-requests', [StudentBorrowRequestController::class, 'index'])->name('borrow-requests.index');
     Route::post('borrow-requests/{bookId}', [StudentBorrowRequestController::class, 'store'])->name('borrow-requests.store');
     Route::delete('borrow-requests/{id}', [StudentBorrowRequestController::class, 'destroy'])->name('borrow-requests.destroy');
+    Route::get('borrow-requests/{id}/receipt', [StudentBorrowRequestController::class, 'receipt'])->name('borrow-requests.receipt');
+    Route::get('receipts', [StudentBorrowRequestController::class, 'receipts'])->name('receipts.index');
     Route::get('active-borrows', [ActiveBorrowController::class, 'index'])->name('active-borrows.index');
     Route::post('active-borrows/{id}/renew', [ActiveBorrowController::class, 'renew'])->name('active-borrows.renew');
     Route::get('subscription', [StudentSubscriptionController::class, 'index'])->name('subscription.index');
@@ -90,6 +99,8 @@ Route::middleware('auth')->group(function () {
         auth()->user()->unreadNotifications->markAsRead();
         return back();
     })->name('notifications.mark-read');
+
+    Route::get('/notifications/{id}/go', [\App\Http\Controllers\NotificationController::class, 'go'])->name('notifications.go');
 
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');

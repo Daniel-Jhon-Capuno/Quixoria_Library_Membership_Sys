@@ -29,6 +29,11 @@ class BorrowRequest extends Model
         'late_fee_waived' => 'boolean',
     ];
 
+    public function user()
+    {
+        return $this->belongsTo(User::class, 'user_id');
+    }
+
     public function student()
     {
         return $this->belongsTo(User::class, 'user_id');

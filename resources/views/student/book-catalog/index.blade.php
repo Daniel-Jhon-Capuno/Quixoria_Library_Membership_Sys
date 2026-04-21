@@ -91,6 +91,15 @@
                             </a>
                         </h3>
 
+                        @if(isset($weeklyBorrows, $tierLimit))
+                            @php $atWeeklyLimit = $weeklyBorrows >= $tierLimit; @endphp
+                            <div class="text-xs mb-2">
+                                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium {{ $atWeeklyLimit ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800' }}">
+                                    Weekly: {{ $weeklyBorrows }}/{{ $tierLimit }}
+                                </span>
+                            </div>
+                        @endif
+
                         <p class="text-sm text-gray-600 mb-2">by {{ $book->author }}</p>
 
                         @if($book->genre)
@@ -125,10 +134,33 @@
                                 @endif
                             </div>
 
-                            <a href="{{ route('student.book-catalog.show', $book) }}"
-                               class="inline-flex items-center px-3 py-1 bg-blue-600 border border-transparent rounded-md text-xs font-medium text-white hover:bg-blue-700">
-                                View Details
-                            </a>
+                            @php $atWeeklyLimit = isset($weeklyBorrows, $tierLimit) && $weeklyBorrows >= $tierLimit; @endphp
+                            <div class="flex items-center gap-2">
+                                @if($atWeeklyLimit)
+                                    <button type="button" disabled title="Reached weekly limit" class="inline-flex items-center px-3 py-1 bg-gray-300 border border-transparent rounded-md text-xs font-medium text-gray-700 cursor-not-allowed">
+                                        View Details
+                                    </button>
+                                @else
+                                    <a href="{{ route('student.book-catalog.show', $book) }}"
+                                       class="inline-flex items-center px-3 py-1 bg-blue-600 border border-transparent rounded-md text-xs font-medium text-white hover:bg-blue-700 view-details-link"
+                                       data-book-id="{{ $book->id }}">
+                                        View Details
+                                    </a>
+                                @endif
+                                {{-- Weekly usage badge and progress bar --}}
+                                @if(isset($weeklyBorrows, $tierLimit))
+                                    @php $pct = $tierLimit ? min(100, intval(($weeklyBorrows / $tierLimit) * 100)) : 0; @endphp
+                                    <div class="ml-2 w-28">
+                                        <div class="flex items-center justify-between text-xs mb-1">
+                                            <span class="text-gray-500">{{ $weeklyBorrows }}/{{ $tierLimit }}</span>
+                                            <span class="text-gray-400">{{ $pct }}%</span>
+                                        </div>
+                                        <div class="w-full bg-gray-200 rounded h-2 overflow-hidden">
+                                            <div class="bg-cyan-500 h-2" style="width: {{ $pct }}%" data-weekly-progress="{{ $book->id }}"></div>
+                                        </div>
+                                    </div>
+                                @endif
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -156,3 +188,103 @@
         </div>
     </div>
 </x-app-layout>
+
+<script>
+    (function(){
+        const usageUrl = '{{ route('student.borrow-usage') }}';
+
+        async function fetchUsage() {
+                try {
+                const res = await fetch(usageUrl, { credentials: 'same-origin' });
+                if (!res.ok) return;
+                const data = await res.json();
+                const weeklyBorrows = data.weeklyBorrows;
+                const tierLimit = data.tierLimit;
+                const atLimit = data.atLimit;
+                const monthlyBorrows = data.monthlyBorrows;
+                const monthlyLimit = data.monthlyLimit;
+                const atMonthlyLimit = data.atMonthlyLimit;
+
+                // Update all badges and progress bars
+                document.querySelectorAll('[data-weekly-progress]').forEach(el => {
+                    const pct = tierLimit ? Math.min(100, Math.floor((weeklyBorrows / tierLimit) * 100)) : 0;
+                    el.style.width = pct + '%';
+                    // update nearby text if present
+                    const parent = el.closest('.w-28');
+                    if (parent) {
+                        const text = parent.querySelector('.flex.items-center.justify-between.text-xs');
+                        if (text) {
+                            // first child span contains X/Y
+                            text.querySelector('span') && (text.querySelector('span').textContent = weeklyBorrows + '/' + tierLimit);
+                        }
+                    }
+                });
+
+                // Enable/disable view details links (disable if either weekly or monthly limit reached)
+                const disableForLimit = atLimit || atMonthlyLimit;
+                document.querySelectorAll('.view-details-link').forEach(a => {
+                    if (disableForLimit) {
+                        // replace link with disabled button
+                        const btn = document.createElement('button');
+                        btn.type = 'button';
+                        btn.disabled = true;
+                        btn.title = atMonthlyLimit ? 'Reached monthly limit' : 'Reached weekly limit';
+                        btn.className = 'inline-flex items-center px-3 py-1 bg-gray-300 border border-transparent rounded-md text-xs font-medium text-gray-700 cursor-not-allowed';
+                        btn.textContent = 'View Details';
+                        a.replaceWith(btn);
+                    }
+                });
+
+            } catch (e) {
+                // fail silently
+                console.error('Failed to fetch borrow usage', e);
+            }
+        }
+
+        // If Laravel Echo is available, subscribe to private user channel for real-time updates
+        const CURRENT_USER_ID = {{ auth()->check() ? auth()->id() : 'null' }};
+        if (window.Echo && CURRENT_USER_ID) {
+            try {
+                window.Echo.private('users.' + CURRENT_USER_ID)
+                    .listen('BorrowUsageUpdated', function(e) {
+                        // Update badges/progress based on event payload
+                        const weeklyBorrows = e.weeklyBorrows;
+                        const tierLimit = e.tierLimit;
+                        const monthlyBorrows = e.monthlyBorrows;
+                        const monthlyLimit = e.monthlyLimit;
+                        const atMonthlyLimit = e.atMonthlyLimit;
+                        const pct = tierLimit ? Math.min(100, Math.floor((weeklyBorrows / tierLimit) * 100)) : 0;
+                        document.querySelectorAll('[data-weekly-progress]').forEach(el => {
+                            el.style.width = pct + '%';
+                            const parent = el.closest('.w-28');
+                            if (parent) {
+                                const text = parent.querySelector('.flex.items-center.justify-between.text-xs');
+                                if (text && text.querySelector('span')) {
+                                    text.querySelector('span').textContent = weeklyBorrows + '/' + tierLimit;
+                                }
+                            }
+                        });
+
+                        const disableForLimit = e.atLimit || atMonthlyLimit;
+                        if (disableForLimit) {
+                            document.querySelectorAll('.view-details-link').forEach(a => {
+                                const btn = document.createElement('button');
+                                btn.type = 'button';
+                                btn.disabled = true;
+                                btn.title = atMonthlyLimit ? 'Reached monthly limit' : 'Reached weekly limit';
+                                btn.className = 'inline-flex items-center px-3 py-1 bg-gray-300 border border-transparent rounded-md text-xs font-medium text-gray-700 cursor-not-allowed';
+                                btn.textContent = 'View Details';
+                                a.replaceWith(btn);
+                            });
+                        }
+                    });
+            } catch (e) {
+                // ignore
+            }
+        }
+
+        // Initial fetch and periodic polling (every 30s)
+        fetchUsage();
+        setInterval(fetchUsage, 30000);
+    })();
+</script>

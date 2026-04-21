@@ -27,7 +27,7 @@ class ReportController extends Controller
 
         $books = Book::select('books.id', 'books.title', DB::raw('COUNT(borrow_requests.id) as borrow_count'))
             ->join('borrow_requests', 'books.id', '=', 'borrow_requests.book_id')
-            ->whereIn('borrow_requests.status', ['active', 'confirmed', 'returned'])
+            ->whereIn('borrow_requests.status', ['active', 'overdue', 'returned'])
             ->whereBetween('borrow_requests.created_at', [$startDate, $endDate])
             ->groupBy('books.id', 'books.title')
             ->orderBy('borrow_count', 'desc')
@@ -118,7 +118,7 @@ class ReportController extends Controller
                 'users.name',
                 'users.email',
                 DB::raw('COUNT(borrow_requests.id) as requests_handled'),
-                DB::raw('COUNT(CASE WHEN borrow_requests.status = "confirmed" THEN 1 END) as confirmed_requests'),
+                DB::raw('COUNT(CASE WHEN borrow_requests.status = "active" THEN 1 END) as confirmed_requests'),
                 DB::raw('COUNT(CASE WHEN borrow_requests.status = "rejected" THEN 1 END) as rejected_requests')
             )
             ->leftJoin('borrow_requests', 'users.id', '=', 'borrow_requests.handled_by')

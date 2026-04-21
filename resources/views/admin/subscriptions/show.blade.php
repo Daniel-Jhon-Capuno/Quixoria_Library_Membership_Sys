@@ -128,9 +128,49 @@
                     </form>
                 </div>
 
-                <div class="flex items-center justify-between">
+                <!-- Override Tier Form -->
+                <div class="mb-6 border-t pt-6">
+                    <h4 class="text-md font-medium text-gray-900 mb-2">Override Membership Tier</h4>
+                    <form method="POST" action="{{ route('admin.subscriptions.override', $subscription->user) }}" class="grid gap-4 sm:grid-cols-4">
+                        @csrf
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">New Tier</label>
+                            <select name="membership_tier_id" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm" required>
+                                <option value="">Select Tier</option>
+                                @foreach(\App\Models\MembershipTier::orderBy('priority_level')->get() as $tier)
+                                    <option value="{{ $tier->id }}">{{ $tier->name }} (${{ $tier->monthly_fee }}/mo)</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Start Date</label>
+                            <input type="date" name="starts_at" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm" required>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">End Date</label>
+                            <input type="date" name="ends_at" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm" required>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Amount Paid</label>
+                            <input type="number" name="amount_paid" step="0.01" min="0" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm" required>
+                        </div>
+                        <div class="flex items-end">
+                            <button type="submit" class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700">Override Tier</button>
+                        </div>
+                    </form>
+                </div>
+
+                <div class="flex items-center">
                     <a href="{{ route('admin.subscriptions.index') }}" class="text-gray-600 hover:text-gray-900">Back to Subscriptions</a>
-                    <a href="{{ route('admin.subscriptions.override', $subscription->user) }}" class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700">Override Tier</a>
+                </div>
+                <div class="mt-4 border-t pt-4">
+                    <h4 class="text-md font-medium text-gray-900 mb-2">Quick Fix: Activate / Extend Subscription</h4>
+                    <form method="POST" action="{{ route('admin.subscriptions.quick-fix', $subscription->user) }}" class="flex items-center space-x-2">
+                        @csrf
+                        <label class="text-sm text-gray-700">Extend days</label>
+                        <input type="number" name="extend_days" value="30" min="1" class="w-24 mt-1 block border-gray-300 rounded-md shadow-sm" />
+                        <button type="button" data-admin-confirm="Activate or extend subscription for {{ addslashes($subscription->user->name) }}?" class="px-3 py-1 bg-indigo-600 text-white rounded-md">Quick Fix</button>
+                    </form>
                 </div>
             </div>
         </div>
