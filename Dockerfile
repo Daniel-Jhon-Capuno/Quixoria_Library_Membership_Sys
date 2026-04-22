@@ -1,43 +1,129 @@
-# 1. Use PHP 8.4 (Required for your Laravel/Symfony version)
 FROM php:8.4-apache
 
-# 2. Install all necessary system libraries
-RUN apt-get update && apt-get install -y \
-    libpq-dev \
-    libpng-dev \
-    libzip-dev \
-    zip \
-    unzip \
-    git \
-    && docker-php-ext-install pdo pdo_pgsql gd zip
 
-# 3. Enable Apache mod_rewrite
+
+# Install system packages and PHP extensions
+
+RUN apt-get update && apt-get install -y \
+
+    git \
+
+    unzip \
+
+    curl \
+
+    libpq-dev \
+
+    libzip-dev \
+
+    libonig-dev \
+
+    libxml2-dev \
+
+    libpng-dev \
+
+    zip \
+
+    && docker-php-ext-install pdo pdo_mysql pdo_pgsql zip mbstring xml \
+
+    && apt-get clean \
+
+    && rm -rf /var/lib/apt/lists/*
+
+
+
+# Enable Apache rewrite
+
 RUN a2enmod rewrite
 
-# 4. Set the working directory
+
+
+# Make Apache use Render's default web port 10000
+
+RUN sed -i 's/Listen 80/Listen 10000/g' /etc/apache2/ports.conf \
+
+&& sed -i 's/<VirtualHost \*:80>/<VirtualHost *:10000>/g' /etc/apache2/sites-available/000-default.conf
+
+
+
+# Set Laravel public as document root
+
+RUN sed -i 's|/var/www/html|/var/www/html/public|g' /etc/apache2/sites-available/000-default.conf \
+
+&& sed -i 's|/var/www/html|/var/www/html/public|g' /etc/apache2/apache2.conf
+
+
+
+# Allow .htaccess for Laravel
+
+RUN printf '<Directory /var/www/html/public>\n\
+
+    AllowOverride All\n\
+
+    Require all granted\n\
+
+</Directory>\n' > /etc/apache2/conf-available/laravel.conf \
+
+&& a2enconf laravel
+
+
+
+# Install Node.js
+
+RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
+
+&& apt-get install -y nodejs
+
+
+
+# Install Composer
+
+COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
+
+
+
 WORKDIR /var/www/html
 
-# 5. Copy your project files
+
+
+# Copy full Laravel app
+
 COPY . .
 
-# 6. Install Composer dependencies
-COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
-RUN composer install --no-dev --optimize-autoloader
 
-# 7. CRITICAL: Set the permissions for Render's user
-# We give full ownership to www-data and ensure storage is writable
-RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache && \
-    chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache
 
-# 8. Point Apache to the Laravel public directory
-ENV APACHE_DOCUMENT_ROOT /var/www/html/public
-RUN sed -ri -e 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/sites-available/*.conf
-RUN sed -ri -e 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/apache2.conf /etc/apache2/conf-available/*.conf
+# Install PHP dependencies
 
-# 9. THE STARTUP COMMAND
-# Migrates database, clears old cache, and starts the server
-CMD php artisan migrate --force && \
-    php artisan config:clear && \
-    php artisan route:clear && \
-    php artisan view:clear && \
-    apache2-foreground
+RUN composer install --no-dev --optimize-autoloader --no-interaction
+
+
+
+# Install frontend dependencies and build Vite assets
+
+RUN npm install
+
+RUN npm run build
+
+
+
+# Create storage symlink for public files
+
+RUN php artisan storage:link || true
+
+
+
+# Set permissions
+
+RUN mkdir -p storage/framework/cache storage/framework/sessions storage/framework/views bootstrap/cache public/uploads \
+
+&& chown -R www-data:www-data storage bootstrap/cache public/uploads \
+
+&& chmod -R 775 storage bootstrap/cache public/uploads
+
+
+
+EXPOSE 10000
+
+
+
+CMD ["apache2-foreground"]
