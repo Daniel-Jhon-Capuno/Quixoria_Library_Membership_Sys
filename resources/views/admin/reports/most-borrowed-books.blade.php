@@ -1,56 +1,66 @@
 <x-app-layout>
     <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-800 leading-tight">Most Borrowed Books Report</h2>
+        <h2 class="font-semibold text-xl text-gray-100 leading-tight">Most Borrowed Books Report</h2>
     </x-slot>
 
     <div class="py-12">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
             <!-- Date Range Filter -->
-            <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg mb-6">
+            <div class="bg-surface overflow-hidden shadow-sm sm:rounded-lg mb-6">
                 <div class="p-6">
                     <form method="GET" action="{{ route('admin.reports.most-borrowed-books') }}" class="flex flex-wrap gap-4 items-end">
                         <div>
-                            <label for="start_date" class="block text-sm font-medium text-gray-700">Start Date</label>
-                            <input type="date" name="start_date" id="start_date" value="{{ request('start_date') }}" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
+                            <label for="start_date" class="block text-sm font-medium text-gray-300">Start Date</label>
+                            <input type="date" name="start_date" id="start_date" value="{{ request('start_date') }}" class="mt-1 block w-full bg-slate-900 border border-slate-700 text-gray-100 rounded-md shadow-sm">
                         </div>
                         <div>
-                            <label for="end_date" class="block text-sm font-medium text-gray-700">End Date</label>
-                            <input type="date" name="end_date" id="end_date" value="{{ request('end_date') }}" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
+                            <label for="end_date" class="block text-sm font-medium text-gray-300">End Date</label>
+                            <input type="date" name="end_date" id="end_date" value="{{ request('end_date') }}" class="mt-1 block w-full bg-slate-900 border border-slate-700 text-gray-100 rounded-md shadow-sm">
                         </div>
                         <div>
-                            <button type="submit" class="inline-flex items-center px-4 py-2 bg-blue-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-blue-700">Filter</button>
+                            <button type="submit" class="btn-primary inline-flex items-center px-4 py-2">Filter</button>
                         </div>
                         <div>
-                            <a href="{{ route('admin.reports.most-borrowed-books') }}" class="inline-flex items-center px-4 py-2 bg-gray-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-gray-700">Clear Filters</a>
+                            <a href="{{ route('admin.reports.most-borrowed-books') }}" class="btn-secondary inline-flex items-center px-4 py-2">Clear Filters</a>
                         </div>
                     </form>
                 </div>
             </div>
 
             <!-- Report Data -->
-            <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
+            <div class="bg-surface overflow-hidden shadow-sm sm:rounded-lg">
                 <div class="p-6">
+                    <div class="mb-6">
+                        <div class="flex items-center justify-between">
+                            <h4 class="text-lg font-medium">Top Books</h4>
+                            <div>
+                                <a href="{{ route('admin.reports.export', ['report' => 'most-borrowed-books', 'start_date' => $startDate, 'end_date' => $endDate, 'format' => 'csv']) }}" class="inline-flex items-center px-3 py-1 bg-slate-800 text-white rounded">Export CSV</a>
+                                <a href="{{ route('admin.reports.export', ['report' => 'most-borrowed-books', 'start_date' => $startDate, 'end_date' => $endDate, 'format' => 'pdf']) }}" class="inline-flex items-center px-3 py-1 bg-slate-800 text-white rounded ml-2">Export PDF</a>
+                            </div>
+                        </div>
+                        <canvas id="booksChart" class="mt-4" height="120"></canvas>
+                    </div>
                     <div class="overflow-x-auto">
-                        <table class="min-w-full divide-y divide-gray-200">
-                            <thead class="bg-gray-50">
+                        <table class="min-w-full divide-y divide-slate-700">
+                            <thead class="bg-slate-800">
                                 <tr>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Book Title</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Author</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ISBN</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Borrow Count</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Book Title</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Author</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">ISBN</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Borrow Count</th>
                                 </tr>
                             </thead>
-                            <tbody class="bg-white divide-y divide-gray-200">
+                            <tbody class="bg-transparent divide-y divide-slate-700">
                                 @forelse($books as $book)
                                 <tr>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{{ $book->title }}</td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ $book->author }}</td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ $book->isbn }}</td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ $book->borrow_count }}</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-100">{{ $book->title }}</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-300">{{ $book->author }}</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-300">{{ $book->isbn }}</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-300">{{ $book->borrow_count }}</td>
                                 </tr>
                                 @empty
                                 <tr>
-                                    <td colspan="4" class="px-6 py-4 text-center text-sm text-gray-500">No data available for the selected period</td>
+                                    <td colspan="4" class="px-6 py-4 text-center text-sm text-gray-300">No data available for the selected period</td>
                                 </tr>
                                 @endforelse
                             </tbody>
@@ -61,8 +71,24 @@
 
             <!-- Back Button -->
             <div class="mt-6">
-                <a href="{{ route('admin.reports.index') }}" class="inline-flex items-center px-4 py-2 bg-gray-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-gray-700">Back to Reports</a>
+                <a href="{{ route('admin.reports.index') }}" class="btn-secondary inline-flex items-center px-4 py-2">Back to Reports</a>
             </div>
         </div>
     </div>
 </x-app-layout>
+
+@push('scripts')
+<script>
+    (function(){
+        const labels = {!! json_encode($chartLabels ?? []) !!};
+        const data = {!! json_encode($chartData ?? []) !!};
+        const ctx = document.getElementById('booksChart');
+        if (!ctx) return;
+        new Chart(ctx.getContext('2d'), {
+            type: 'bar',
+            data: { labels: labels, datasets: [{ label: 'Borrows', data: data, backgroundColor: 'rgba(16,185,129,0.8)' }] },
+            options: { responsive: true, plugins: { legend: { display: false } }, scales: { x: { ticks: { maxRotation: 45, minRotation: 0 } } } }
+        });
+    })();
+</script>
+@endpush

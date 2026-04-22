@@ -12,11 +12,12 @@
                 <div class="mb-4 p-4 bg-slate-800 border border-slate-700 text-green-200 rounded-md">{{ session('success') }}</div>
             @endif
 
-            <div class="mb-6 bg-slate-800 p-6 shadow-sm rounded-lg">
+            <div class="card mb-6">
+                <div class="card-body">
                 <form method="GET" action="{{ route('admin.subscriptions.index') }}" class="grid gap-4 sm:grid-cols-2">
                     <div>
                         <label class="block text-sm font-medium text-gray-300">Status</label>
-                        <select name="status" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
+                        <select name="status" class="mt-1 block w-full bg-slate-900 border border-slate-700 text-gray-100 rounded-md shadow-sm">
                             <option value="">All</option>
                             <option value="active" {{ request('status') === 'active' ? 'selected' : '' }}>Active</option>
                             <option value="expired" {{ request('status') === 'expired' ? 'selected' : '' }}>Expired</option>
@@ -25,12 +26,14 @@
                         </select>
                     </div>
                     <div class="flex items-end gap-2">
-                        <button type="submit" class="px-4 py-2 bg-gray-700 text-gray-100 rounded-md hover:bg-gray-600">Filter</button>
-                        <a href="{{ route('admin.subscriptions.index') }}" class="px-4 py-2 border border-slate-700 rounded-md text-gray-400 hover:bg-slate-700">Reset</a>
+                        <button type="submit" class="btn-primary">Filter</button>
+                        <a href="{{ route('admin.subscriptions.index') }}" class="btn-secondary">Reset</a>
                     </div>
                 </form>
+                </div>
             </div>
-            <div class="bg-slate-800 shadow-sm rounded-lg overflow-hidden">
+            <div class="card">
+                <div class="card-body p-0">
                 <table class="min-w-full divide-y divide-slate-700">
                     <thead class="bg-slate-800">
                         <tr>
@@ -65,11 +68,11 @@
                                     @if($subscription->status === 'pending')
                                         <form method="POST" action="{{ route('admin.subscriptions.confirm', $subscription) }}" class="inline-block">
                                             @csrf
-                                            <button type="submit" class="ml-2 px-3 py-1 bg-green-700 text-white rounded-md">Approve</button>
+                                            <button type="submit" class="btn-primary ml-2">Approve</button>
                                         </form>
                                         <form method="POST" action="{{ route('admin.subscriptions.reject', $subscription) }}" class="inline-block">
                                             @csrf
-                                            <button type="submit" class="ml-2 px-3 py-1 bg-red-700 text-white rounded-md">Reject</button>
+                                            <button type="submit" class="btn-secondary ml-2">Reject</button>
                                         </form>
                                     @endif
                                 </td>
@@ -81,6 +84,7 @@
 
             <div class="mt-4">
                 {{ $subscriptions->links() }}
+            </div>
             </div>
         </div>
     </div>

@@ -60,7 +60,7 @@
 
     <!-- Overdue Borrows (High Priority) -->
     @if(($overdueBorrows ?? collect())->count() > 0)
-        <div class="rounded-xl p-6 shadow-card mb-8 bg-slate-800 border border-red-700/40">
+        <div class="card mb-8" style="border: 1px solid rgba(220,40,40,0.08);">
             <div class="flex items-center gap-2 mb-6">
                 <svg class="w-6 h-6 text-red-400" fill="currentColor" viewBox="0 0 20 20">
                     <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"></path>
@@ -103,9 +103,10 @@
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
         <!-- Requests Table -->
         <div class="lg:col-span-2">
-                <div class="rounded-xl p-6 shadow-card bg-slate-800 border border-slate-700">
-                <h3 class="font-semibold mb-6 text-gray-100">Pending Borrow Requests</h3>
-                <div class="overflow-x-auto">
+            <div class="card">
+            <div class="card-body">
+            <h3 class="font-semibold mb-6 text-gray-100">Pending Borrow Requests</h3>
+            <div class="overflow-x-auto">
                     <table class="w-full">
                         <thead>
                             <tr style="border-bottom-color: rgb(var(--border-primary));" class="border-b">
@@ -135,17 +136,20 @@
                         </tbody>
                     </table>
                 </div>
-            </div>
+                </div>
+                </div>
         </div>
 
         <!-- Quick Stats -->
-        <div class="space-y-4">
-            <div class="rounded-xl p-6 shadow-card bg-slate-800 border border-slate-700">
+            <div class="space-y-4">
+            <div class="card">
+                <div class="card-body">
                 <h4 class="font-semibold mb-4 text-gray-100">Quick Actions</h4>
                 <div class="space-y-3">
                     <a href="{{ route('staff.borrow-requests.index') }}" class="block w-full px-4 py-2 bg-gray-700 hover:bg-gray-600 rounded-lg text-gray-100 font-medium transition text-center text-sm">View All Requests</a>
                     <button class="block w-full px-4 py-2 bg-slate-700 hover:bg-slate-600 rounded-lg text-gray-100 font-medium transition text-center text-sm" onclick="document.querySelector('[data-overdue-list]').scrollIntoView({behavior: 'smooth'})">Overdue List</button>
                     <a href="{{ route('admin.users.index') }}" class="block w-full px-4 py-2 bg-slate-700 hover:bg-slate-600 rounded-lg text-gray-100 font-medium transition text-center text-sm">Member Search</a>
+                </div>
                 </div>
             </div>
         </div>

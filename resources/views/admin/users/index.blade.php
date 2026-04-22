@@ -12,7 +12,8 @@
                 <div class="mb-4 p-4 bg-green-100 border border-green-200 text-green-800 rounded-md">{{ session('success') }}</div>
             @endif
 
-            <div class="mb-6 bg-slate-800 p-6 shadow-sm rounded-lg">
+            <div class="card mb-6">
+                <div class="card-body">
                 <form method="GET" action="{{ route('admin.users.index') }}" class="grid gap-4 sm:grid-cols-3">
                     <div>
                         <label class="block text-sm font-medium text-gray-200">Role</label>
@@ -32,12 +33,14 @@
                         </select>
                     </div>
                     <div class="flex items-end gap-2">
-                        <button type="submit" class="px-4 py-2 bg-cyan-600 text-white rounded-md hover:bg-cyan-500">Filter</button>
-                        <a href="{{ route('admin.users.index') }}" class="px-4 py-2 border border-slate-700 rounded-md text-gray-200 hover:bg-slate-700">Reset</a>
+                        <button type="submit" class="btn-primary">Filter</button>
+                        <a href="{{ route('admin.users.index') }}" class="btn-secondary">Reset</a>
                     </div>
                 </form>
+                </div>
             </div>
-            <div class="bg-slate-800 shadow-sm rounded-lg overflow-hidden">
+            <div class="card">
+                <div class="card-body p-0">
                 <table class="min-w-full divide-y divide-slate-700">
                     <thead class="bg-slate-800">
                         <tr>
@@ -80,6 +83,7 @@
 
             <div class="mt-4">
                 {{ $users->links() }}
+            </div>
             </div>
         </div>
     </div>

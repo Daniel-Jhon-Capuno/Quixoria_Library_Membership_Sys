@@ -1,8 +1,8 @@
 @props(['user' => null])
 
-<div class="fixed left-0 top-0 h-screen w-56 shadow-xl z-50" style="background: linear-gradient(to bottom, rgb(20, 45, 70), rgb(10, 20, 35)); overflow-y-auto;">
+<div x-bind:class="sidebarCollapsed ? 'fixed left-0 top-0 h-screen w-16 shadow-xl z-50 sidebar collapsed' : 'fixed left-0 top-0 h-screen w-56 shadow-xl z-50 sidebar'" style="background: linear-gradient(to bottom, rgb(20, 45, 70), rgb(10, 20, 35)); overflow-y-auto;" x-cloak>
     <!-- Logo Area -->
-    <div class="px-6 py-8 border-b" style="border-color: rgb(var(--border-primary)); border-color: rgba(40, 100, 150, 0.3);">
+    <div class="px-4 py-6 border-b flex items-center justify-between" style="border-color: rgb(var(--border-primary)); border-color: rgba(40, 100, 150, 0.3);">
         <div class="flex items-center gap-3">
             <div class="w-12 h-12 rounded-lg flex items-center justify-center" style="background: linear-gradient(to bottom right, rgba(100, 200, 255, 0.2), rgba(0, 255, 200, 0.2));">
                 <svg class="w-6 h-6" style="color: rgb(var(--accent-primary));" fill="currentColor" viewBox="0 0 20 20">
@@ -10,15 +10,20 @@
                     <path fill-rule="evenodd" d="M3 10a1 1 0 011-1h12a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6z" clip-rule="evenodd"></path>
                 </svg>
             </div>
-            <div>
-                <h2 class="font-bold text-lg" style="color: rgb(var(--text-primary));">LibraryHub</h2>
-                <p class="text-xs" style="color: rgb(var(--text-secondary));">Membership System</p>
+            <div class="transition-opacity duration-200 sidebar-label">
+                <h2 class="font-bold text-lg" style="color: rgb(var(--text-primary));">Quixoria</h2>
+                <p class="text-xs" style="color: rgb(var(--text-secondary));">Start your reading adventure</p>
             </div>
+        
+        <button @click="sidebarCollapsed = !sidebarCollapsed; localStorage.setItem('sidebarCollapsed', sidebarCollapsed); window.dispatchEvent(new CustomEvent('sidebar-toggled', { detail: sidebarCollapsed }))" class="p-2 rounded-md hover:bg-slate-800/50 ml-2 text-sm" style="color: rgb(var(--text-secondary));">
+            <svg x-show="!sidebarCollapsed" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h7"></path></svg>
+            <svg x-show="sidebarCollapsed" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+        </button>
         </div>
     </div>
 
     <!-- Navigation -->
-    <nav class="px-3 py-6 space-y-2 flex-1">
+    <nav class="px-2 py-6 space-y-2 flex-1">
         @if(auth()->user()->role === 'admin')
             <x-sidebar-link href="{{ route('admin.dashboard.index') }}" icon="chart-bar" label="Dashboard" />
             <x-sidebar-link href="{{ route('admin.users.index') }}" icon="users" label="User Management" />
@@ -42,11 +47,11 @@
     <!-- User Info -->
     <div class="px-3 py-4 border-t" style="border-color: rgba(40, 100, 150, 0.3);">
         <button onclick="document.getElementById('profile-menu').classList.toggle('hidden')" 
-                class="w-full flex items-center gap-3 p-3 rounded-lg transition" style="background: rgba(100, 200, 255, 0.1); border: 1px solid rgba(100, 200, 255, 0.2);">
+                class="w-full flex items-center gap-3 p-2 rounded-lg transition sidebar-label" style="background: rgba(100, 200, 255, 0.06); border: 1px solid rgba(100, 200, 255, 0.02);">
             <div class="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0" style="background: linear-gradient(to bottom right, rgba(100, 200, 255, 0.3), rgba(0, 255, 200, 0.3));">
                 <span class="font-bold text-sm" style="color: rgb(var(--accent-primary));">{{ substr(auth()->user()->name, 0, 1) }}</span>
             </div>
-            <div class="text-left flex-1 min-w-0">
+            <div class="text-left flex-1 min-w-0 sidebar-label">
                 <p class="font-medium text-sm truncate" style="color: rgb(var(--text-primary));">{{ auth()->user()->name }}</p>
                 <p class="text-xs" style="color: rgb(var(--text-secondary));">{{ ucfirst(auth()->user()->role) }}</p>
             </div>

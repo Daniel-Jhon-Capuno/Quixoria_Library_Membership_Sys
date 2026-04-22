@@ -1,33 +1,39 @@
-# 1. Use PHP 8.4 (The latest to match your composer requirements)
-FROM php:8.4-apache
+# 1. Use the official PHP 8.2 Apache image as a base
+FROM php:8.2-apache
 
-# 2. Install system tools, Node.js, and ZIP libraries
+# 2. Install system dependencies and PHP extensions for Postgres
 RUN apt-get update && apt-get install -y \
-    libpng-dev libonig-dev libxml2-dev libzip-dev zip unzip git curl
+    libpq-dev \
+    libpng-dev \
+    zip \
+    unzip \
+    git \
+    && docker-php-ext-install pdo pdo_pgsql gd
 
-RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - && apt-get install -y nodejs
-
-# 3. Install PHP extensions (Added zip here)
-RUN docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd zip
+# 3. Enable Apache mod_rewrite for Laravel routing
 RUN a2enmod rewrite
 
-# 4. Set up the working directory
-COPY . /var/www/html
+# 4. Set the working directory
 WORKDIR /var/www/html
 
-# 5. Install Composer
+# 5. Copy the project files into the container
+COPY . .
+
+# 6. Install Composer (PHP package manager)
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
-
-# 6. Build the application
-# We add --ignore-platform-reqs just in case there's a small mismatch, 
-# but PHP 8.4 should cover it.
 RUN composer install --no-dev --optimize-autoloader
-RUN npm install && npm run build
 
-# 7. Set permissions
+# 7. Set permissions so Apache can read your files
 RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
 
-# 8. Point Apache to Laravel's public directory
-RUN sed -ri -e 's!/var/www/html!/var/www/html/public!g' /etc/apache2/sites-available/*.conf
+# 8. Update Apache to point to Laravel's /public folder
+ENV APACHE_DOCUMENT_ROOT /var/www/html/public
+RUN sed -ri -e 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/sites-available/*.conf
+RUN sed -ri -e 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/apache2.conf /etc/apache2/conf-available/*.conf
 
-CMD ["apache2-foreground"]
+# 9. THE "MAGIC" COMMAND: Migrate, Cache, and Start
+# This ensures the database is built before the site goes live.
+CMD php artisan migrate --force && \
+    php artisan config:cache && \
+    php artisan route:cache && \
+    apache2-foreground

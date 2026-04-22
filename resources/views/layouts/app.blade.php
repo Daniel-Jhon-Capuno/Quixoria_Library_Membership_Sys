@@ -20,16 +20,18 @@
         <!-- Scripts -->
         @vite(['resources/css/app.css', 'resources/js/app.js'])
     </head>
-    <body class="font-sans antialiased" 
-          style="background-color: rgb(var(--bg-primary)); color: rgb(var(--text-primary));"
-          x-data="{ isDarkMode: true }"
-          @theme-changed="isDarkMode = document.documentElement.classList.contains('dark')">
+        <body class="font-sans antialiased" 
+            style="background-color: rgb(var(--bg-primary)); color: rgb(var(--text-primary));"
+              x-data="{ isDarkMode: true, sidebarCollapsed: false }"
+              x-init="(()=>{ sidebarCollapsed = (localStorage.getItem('sidebarCollapsed') === 'true') || (window.innerWidth < 1024); window.addEventListener('resize', () => { if(window.innerWidth < 1024) sidebarCollapsed = true; }); })()"
+            @theme-changed="isDarkMode = document.documentElement.classList.contains('dark')"
+            @sidebar-toggled.window="sidebarCollapsed = $event.detail">
         
         <div class="min-h-screen" style="background-color: rgb(var(--bg-primary));">
             <!-- Sidebar -->
             <x-sidebar />
 
-            <div class="ml-56 flex flex-col min-h-screen">
+            <div :class="sidebarCollapsed ? 'ml-16' : 'ml-56'" class="flex flex-col min-h-screen transition-all duration-200">
                 <!-- Top Navigation Bar -->
                 <header class="sticky top-0 z-40" style="background-color: rgb(var(--surface-primary)); border-bottom-color: rgb(var(--border-primary));" class="border-b">
                     <div class="px-6 py-4 flex items-center justify-between">
@@ -96,6 +98,7 @@
 
                 <!-- Page Content -->
                 <main class="flex-1 px-6 py-8">
+                    <div class="max-w-7xl mx-auto w-full">
                     @if(session('success'))
                         <div class="mb-4 p-4 bg-green-800 border border-green-700 text-green-100 rounded-md">{{ session('success') }}</div>
                     @endif
@@ -103,6 +106,7 @@
                         <div class="mb-4 p-4 bg-red-800 border border-red-700 text-red-100 rounded-md">{{ session('error') }}</div>
                     @endif
                     {{ $slot }}
+                    </div>
                 </main>
 
                 <!-- Footer -->

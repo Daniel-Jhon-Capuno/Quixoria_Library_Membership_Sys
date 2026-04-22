@@ -12,6 +12,8 @@ use App\Models\Transaction;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Symfony\Component\HttpFoundation\StreamedResponse;
+use Barryvdh\DomPDF\Facade\Pdf as PDF;
 
 class ReportController extends Controller
 {
@@ -33,7 +35,11 @@ class ReportController extends Controller
             ->orderBy('borrow_count', 'desc')
             ->paginate(15);
 
-        return view('admin.reports.most-borrowed-books', compact('books', 'startDate', 'endDate'));
+        // prepare chart data (top 10 in current query)
+        $chartLabels = $books->pluck('title')->take(10)->toArray();
+        $chartData = $books->pluck('borrow_count')->take(10)->toArray();
+
+        return view('admin.reports.most-borrowed-books', compact('books', 'startDate', 'endDate', 'chartLabels', 'chartData'));
     }
 
     public function overdueStatistics(Request $request)
@@ -58,7 +64,10 @@ class ReportController extends Controller
             ->orderBy('overdue_count', 'desc')
             ->get();
 
-        return view('admin.reports.overdue-statistics', compact('overdueStats', 'startDate', 'endDate'));
+        $chartLabels = $overdueStats->pluck('tier_name')->toArray();
+        $chartData = $overdueStats->pluck('overdue_count')->toArray();
+
+        return view('admin.reports.overdue-statistics', compact('overdueStats', 'startDate', 'endDate', 'chartLabels', 'chartData'));
     }
 
     public function subscriptionRevenue(Request $request)
@@ -78,7 +87,133 @@ class ReportController extends Controller
             ->orderBy('month')
             ->get();
 
-        return view('admin.reports.subscription-revenue', compact('revenue', 'startDate', 'endDate'));
+        $labels = $revenue->pluck('month')->toArray();
+        $net = $revenue->pluck('net_revenue')->toArray();
+
+        return view('admin.reports.subscription-revenue', compact('revenue', 'startDate', 'endDate', 'labels', 'net'));
+    }
+
+    /**
+     * Export report data as CSV or PDF.
+     * Supported reports: most-borrowed-books, subscription-revenue, overdue-statistics
+     */
+    public function export(Request $request, $report)
+    {
+        $format = $request->get('format', 'csv');
+
+        if ($report === 'most-borrowed-books') {
+            $startDate = $request->get('start_date', now()->startOfMonth()->format('Y-m-d'));
+            $endDate = $request->get('end_date', now()->endOfMonth()->format('Y-m-d'));
+
+            $rows = Book::select('books.title', 'books.author', 'books.isbn', DB::raw('COUNT(borrow_requests.id) as borrow_count'))
+                ->join('borrow_requests', 'books.id', '=', 'borrow_requests.book_id')
+                ->whereIn('borrow_requests.status', ['active', 'overdue', 'returned'])
+                ->whereBetween('borrow_requests.created_at', [$startDate, $endDate])
+                ->groupBy('books.id', 'books.title', 'books.author', 'books.isbn')
+                ->orderBy('borrow_count', 'desc')
+                ->get();
+
+            if ($format === 'csv') {
+                $response = new StreamedResponse(function() use ($rows) {
+                    $out = fopen('php://output', 'w');
+                    fputcsv($out, ['Title', 'Author', 'ISBN', 'Borrow Count']);
+                    foreach ($rows as $r) {
+                        fputcsv($out, [$r->title, $r->author, $r->isbn, $r->borrow_count]);
+                    }
+                    fclose($out);
+                });
+
+                $response->headers->set('Content-Type', 'text/csv');
+                $response->headers->set('Content-Disposition', 'attachment; filename="most-borrowed-books.csv"');
+                return $response;
+            }
+
+            if ($format === 'pdf' && class_exists(PDF::class)) {
+                $html = view('admin.reports.exports.most-borrowed-books', compact('rows'))->render();
+                return PDF::loadHTML($html)->download('most-borrowed-books.pdf');
+            }
+        }
+
+        if ($report === 'subscription-revenue') {
+            $startDate = $request->get('start_date', now()->startOfYear()->format('Y-m-d'));
+            $endDate = $request->get('end_date', now()->endOfYear()->format('Y-m-d'));
+
+            $rows = Transaction::select(
+                    DB::raw('DATE_FORMAT(created_at, "%Y-%m") as month'),
+                    DB::raw('SUM(CASE WHEN type = "payment" THEN amount ELSE 0 END) as payments'),
+                    DB::raw('SUM(CASE WHEN type = "refund" THEN amount ELSE 0 END) as refunds'),
+                    DB::raw('SUM(CASE WHEN type = "adjustment" THEN amount ELSE 0 END) as adjustments'),
+                    DB::raw('SUM(CASE WHEN type IN ("payment", "adjustment") THEN amount ELSE -amount END) as net_revenue')
+                )
+                ->whereBetween('created_at', [$startDate, $endDate])
+                ->groupBy('month')
+                ->orderBy('month')
+                ->get();
+
+            if ($format === 'csv') {
+                $response = new StreamedResponse(function() use ($rows) {
+                    $out = fopen('php://output', 'w');
+                    fputcsv($out, ['Month', 'Payments', 'Refunds', 'Adjustments', 'Net Revenue']);
+                    foreach ($rows as $r) {
+                        fputcsv($out, [$r->month, $r->payments, $r->refunds, $r->adjustments, $r->net_revenue]);
+                    }
+                    fclose($out);
+                });
+
+                $response->headers->set('Content-Type', 'text/csv');
+                $response->headers->set('Content-Disposition', 'attachment; filename="subscription-revenue.csv"');
+                return $response;
+            }
+
+            if ($format === 'pdf' && class_exists(PDF::class)) {
+                $html = view('admin.reports.exports.subscription-revenue', compact('rows'))->render();
+                return PDF::loadHTML($html)->download('subscription-revenue.pdf');
+            }
+        }
+
+        if ($report === 'overdue-statistics') {
+            $startDate = $request->get('start_date', now()->startOfMonth()->format('Y-m-d'));
+            $endDate = $request->get('end_date', now()->endOfMonth()->format('Y-m-d'));
+
+            $rows = BorrowRequest::select(
+                    'membership_tiers.name as tier_name',
+                    DB::raw('COUNT(borrow_requests.id) as overdue_count'),
+                    DB::raw('AVG(DATEDIFF(CURDATE(), borrow_requests.due_at)) as avg_days_overdue')
+                )
+                ->join('users', 'borrow_requests.user_id', '=', 'users.id')
+                ->join('subscriptions', function($join) {
+                    $join->on('users.id', '=', 'subscriptions.user_id')
+                         ->where('subscriptions.status', 'active');
+                })
+                ->join('membership_tiers', 'subscriptions.membership_tier_id', '=', 'membership_tiers.id')
+                ->where('borrow_requests.status', 'overdue')
+                ->whereBetween('borrow_requests.created_at', [$startDate, $endDate])
+                ->groupBy('membership_tiers.id', 'membership_tiers.name')
+                ->orderBy('overdue_count', 'desc')
+                ->get();
+
+            if ($format === 'csv') {
+                $response = new StreamedResponse(function() use ($rows) {
+                    $out = fopen('php://output', 'w');
+                    fputcsv($out, ['Tier', 'Overdue Count', 'Avg Days Overdue']);
+                    foreach ($rows as $r) {
+                        fputcsv($out, [$r->tier_name, $r->overdue_count, number_format($r->avg_days_overdue, 1)]);
+                    }
+                    fclose($out);
+                });
+
+                $response->headers->set('Content-Type', 'text/csv');
+                $response->headers->set('Content-Disposition', 'attachment; filename="overdue-statistics.csv"');
+                return $response;
+            }
+
+            if ($format === 'pdf' && class_exists(PDF::class)) {
+                $html = view('admin.reports.exports.overdue-statistics', compact('rows'))->render();
+                return PDF::loadHTML($html)->download('overdue-statistics.pdf');
+            }
+        }
+
+        return back()->withErrors(['error' => 'Unsupported report or format.']);
     }
 
     public function studentActivity(Request $request)

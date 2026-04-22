@@ -10,7 +10,8 @@
             @endif
 
             <!-- Subscription Details -->
-            <div class="bg-slate-800 shadow-sm rounded-lg p-6 mb-6">
+            <div class="card mb-6">
+                <div class="card-body">
                 <h3 class="text-lg font-medium text-gray-100 mb-4">Subscription Information</h3>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
@@ -56,10 +57,12 @@
                     </div>
                     @endif
                 </div>
+                </div>
             </div>
 
             <!-- Transaction History -->
-            <div class="bg-slate-800 shadow-sm rounded-lg p-6 mb-6">
+            <div class="card mb-6">
+                <div class="card-body">
                 <h3 class="text-lg font-medium text-gray-100 mb-4">Transaction History</h3>
                 <div class="overflow-x-auto">
                     <table class="min-w-full divide-y divide-slate-700">
@@ -96,25 +99,27 @@
                         </tbody>
                     </table>
                 </div>
+                </div>
             </div>
 
             <!-- Admin Actions -->
-            <div class="bg-white shadow-sm rounded-lg p-6">
-                <h3 class="text-lg font-medium text-gray-900 mb-4">Admin Actions</h3>
+            <div class="card">
+                <div class="card-body">
+                <h3 class="text-lg font-medium text-gray-100 mb-4">Admin Actions</h3>
 
                 @if($subscription->status === 'pending')
                 <div class="mb-6">
-                    <h4 class="text-md font-medium text-gray-900 mb-2">Pending Subscription Actions</h4>
+                    <h4 class="text-md font-medium text-gray-100 mb-2">Pending Subscription Actions</h4>
                     <div class="flex items-center gap-3">
                         <form method="POST" action="{{ route('admin.subscriptions.confirm', $subscription) }}">
                             @csrf
-                            <button type="submit" class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700">Approve Subscription</button>
+                            <button type="submit" class="btn-primary">Approve Subscription</button>
                         </form>
 
                         <form method="POST" action="{{ route('admin.subscriptions.reject', $subscription) }}" class="flex items-center gap-2">
                             @csrf
-                            <input type="text" name="reason" placeholder="Optional rejection reason" class="border border-gray-300 rounded-md px-2 py-1" />
-                            <button type="submit" class="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700">Reject Subscription</button>
+                            <input type="text" name="reason" placeholder="Optional rejection reason" class="border border-slate-700 rounded-md px-2 py-1 bg-slate-900 text-gray-100" />
+                            <button type="submit" class="btn-secondary">Reject Subscription</button>
                         </form>
                     </div>
                 </div>
@@ -122,38 +127,38 @@
 
                 <!-- Manual Adjustment Form -->
                 <div class="mb-6">
-                    <h4 class="text-md font-medium text-gray-900 mb-2">Record Manual Adjustment</h4>
+                    <h4 class="text-md font-medium text-gray-100 mb-2">Record Manual Adjustment</h4>
                     <form method="POST" action="{{ route('admin.subscriptions.adjust', $subscription) }}" class="grid gap-4 sm:grid-cols-3">
                         @csrf
                         <div>
-                            <label class="block text-sm font-medium text-gray-700">Type</label>
-                            <select name="type" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm" required>
+                            <label class="block text-sm font-medium text-gray-300">Type</label>
+                            <select name="type" class="mt-1 block w-full bg-slate-900 border border-slate-700 text-gray-100 rounded-md shadow-sm" required>
                                 <option value="refund">Refund</option>
                                 <option value="adjustment">Adjustment</option>
                             </select>
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-700">Amount</label>
-                            <input type="number" name="amount" step="0.01" min="0.01" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm" required>
+                            <label class="block text-sm font-medium text-gray-300">Amount</label>
+                            <input type="number" name="amount" step="0.01" min="0.01" class="mt-1 block w-full bg-slate-900 border border-slate-700 text-gray-100 rounded-md shadow-sm" required>
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-700">Reason</label>
-                            <input type="text" name="reference_note" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm" required>
+                            <label class="block text-sm font-medium text-gray-300">Reason</label>
+                            <input type="text" name="reference_note" class="mt-1 block w-full bg-slate-900 border border-slate-700 text-gray-100 rounded-md shadow-sm" required>
                         </div>
                         <div class="flex items-end">
-                            <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">Record Adjustment</button>
+                            <button type="submit" class="btn-primary">Record Adjustment</button>
                         </div>
                     </form>
                 </div>
 
                 <!-- Override Tier Form -->
                 <div class="mb-6 border-t pt-6">
-                    <h4 class="text-md font-medium text-gray-900 mb-2">Override Membership Tier</h4>
+                    <h4 class="text-md font-medium text-gray-100 mb-2">Override Membership Tier</h4>
                     <form method="POST" action="{{ route('admin.subscriptions.override', $subscription->user) }}" class="grid gap-4 sm:grid-cols-4">
                         @csrf
                         <div>
-                            <label class="block text-sm font-medium text-gray-700">New Tier</label>
-                            <select name="membership_tier_id" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm" required>
+                            <label class="block text-sm font-medium text-gray-300">New Tier</label>
+                            <select name="membership_tier_id" class="mt-1 block w-full bg-slate-900 border border-slate-700 text-gray-100 rounded-md shadow-sm" required>
                                 <option value="">Select Tier</option>
                                 @foreach(\App\Models\MembershipTier::orderBy('priority_level')->get() as $tier)
                                     <option value="{{ $tier->id }}">{{ $tier->name }} (${{ $tier->monthly_fee }}/mo)</option>
@@ -161,31 +166,31 @@
                             </select>
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-700">Start Date</label>
-                            <input type="date" name="starts_at" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm" required>
+                            <label class="block text-sm font-medium text-gray-300">Start Date</label>
+                            <input type="date" name="starts_at" class="mt-1 block w-full bg-slate-900 border border-slate-700 text-gray-100 rounded-md shadow-sm" required>
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-700">End Date</label>
-                            <input type="date" name="ends_at" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm" required>
+                            <label class="block text-sm font-medium text-gray-300">End Date</label>
+                            <input type="date" name="ends_at" class="mt-1 block w-full bg-slate-900 border border-slate-700 text-gray-100 rounded-md shadow-sm" required>
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-700">Amount Paid</label>
-                            <input type="number" name="amount_paid" step="0.01" min="0" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm" required>
+                            <label class="block text-sm font-medium text-gray-300">Amount Paid</label>
+                            <input type="number" name="amount_paid" step="0.01" min="0" class="mt-1 block w-full bg-slate-900 border border-slate-700 text-gray-100 rounded-md shadow-sm" required>
                         </div>
                         <div class="flex items-end">
-                            <button type="submit" class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700">Override Tier</button>
+                            <button type="submit" class="btn-primary">Override Tier</button>
                         </div>
                     </form>
                 </div>
 
                 <!-- Force Activate Form -->
                 <div class="mb-6 border-t pt-6">
-                    <h4 class="text-md font-medium text-gray-900 mb-2">Force Activate Tier</h4>
+                    <h4 class="text-md font-medium text-gray-100 mb-2">Force Activate Tier</h4>
                     <form method="POST" action="{{ route('admin.subscriptions.force', $subscription->user) }}" class="grid gap-4 sm:grid-cols-2">
                         @csrf
                         <div>
-                            <label class="block text-sm font-medium text-gray-700">Immediate Tier</label>
-                            <select name="membership_tier_id" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm" required>
+                            <label class="block text-sm font-medium text-gray-300">Immediate Tier</label>
+                            <select name="membership_tier_id" class="mt-1 block w-full bg-slate-900 border border-slate-700 text-gray-100 rounded-md shadow-sm" required>
                                 <option value="">Select Tier</option>
                                 @foreach(\App\Models\MembershipTier::orderBy('priority_level')->get() as $tierOption)
                                     <option value="{{ $tierOption->id }}">{{ $tierOption->name }} ({{ number_format($tierOption->monthly_fee,2) }}/mo)</option>
@@ -193,22 +198,23 @@
                             </select>
                         </div>
                         <div class="flex items-end">
-                            <button type="submit" class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700">Force Activate Now</button>
+                            <button type="submit" class="btn-primary">Force Activate Now</button>
                         </div>
                     </form>
                 </div>
 
                 <div class="flex items-center">
-                    <a href="{{ route('admin.subscriptions.index') }}" class="text-gray-600 hover:text-gray-900">Back to Subscriptions</a>
+                    <a href="{{ route('admin.subscriptions.index') }}" class="text-gray-300 hover:text-gray-100">Back to Subscriptions</a>
                 </div>
                 <div class="mt-4 border-t pt-4">
-                    <h4 class="text-md font-medium text-gray-900 mb-2">Quick Fix: Activate / Extend Subscription</h4>
+                    <h4 class="text-md font-medium text-gray-100 mb-2">Quick Fix: Activate / Extend Subscription</h4>
                     <form method="POST" action="{{ route('admin.subscriptions.quick-fix', $subscription->user) }}" class="flex items-center space-x-2">
                         @csrf
-                        <label class="text-sm text-gray-700">Extend days</label>
-                        <input type="number" name="extend_days" value="30" min="1" class="w-24 mt-1 block border-gray-300 rounded-md shadow-sm" />
-                        <button type="button" data-admin-confirm="Activate or extend subscription for {{ addslashes($subscription->user->name) }}?" class="px-3 py-1 bg-indigo-600 text-white rounded-md">Quick Fix</button>
+                        <label class="text-sm text-gray-300">Extend days</label>
+                        <input type="number" name="extend_days" value="30" min="1" class="w-24 mt-1 block bg-slate-900 border border-slate-700 text-gray-100 rounded-md shadow-sm" />
+                        <button type="button" data-admin-confirm="Activate or extend subscription for {{ addslashes($subscription->user->name) }}?" class="btn-primary">Quick Fix</button>
                     </form>
+                </div>
                 </div>
             </div>
         </div>

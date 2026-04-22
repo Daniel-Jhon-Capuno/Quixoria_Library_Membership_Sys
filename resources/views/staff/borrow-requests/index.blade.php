@@ -6,8 +6,8 @@
     <div class="py-12">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
             <!-- Status Filter -->
-            <div class="bg-slate-800 overflow-hidden shadow-sm sm:rounded-lg mb-6 border border-slate-700">
-                <div class="p-6">
+            <div class="card mb-6">
+                <div class="card-body">
                     <form method="GET" action="{{ route('staff.borrow-requests.index') }}" class="flex flex-wrap gap-4 items-end">
                         <div>
                             <label for="status" class="block text-sm font-medium text-gray-300">Status</label>
@@ -21,18 +21,18 @@
                             </select>
                         </div>
                         <div>
-                            <button type="submit" class="inline-flex items-center px-4 py-2 bg-gray-700 border border-transparent rounded-md font-semibold text-xs text-gray-100 uppercase tracking-widest hover:bg-gray-600">Filter</button>
+                            <button type="submit" class="btn-primary">Filter</button>
                         </div>
                         <div>
-                            <a href="{{ route('staff.borrow-requests.index') }}" class="inline-flex items-center px-4 py-2 bg-gray-700 border border-transparent rounded-md font-semibold text-xs text-gray-100 uppercase tracking-widest hover:bg-gray-600">Clear Filters</a>
+                            <a href="{{ route('staff.borrow-requests.index') }}" class="btn-secondary">Clear Filters</a>
                         </div>
                     </form>
                 </div>
             </div>
 
             <!-- Borrow Requests Table -->
-            <div class="bg-slate-800 overflow-hidden shadow-sm sm:rounded-lg border border-slate-700">
-                <div class="p-6">
+            <div class="card">
+                <div class="card-body p-0">
                     <div class="overflow-x-auto">
                         <table class="min-w-full divide-y divide-slate-700">
                             <thead class="bg-slate-800">
@@ -125,8 +125,9 @@
 
     <!-- Reject Modal -->
     <div id="rejectModal" class="fixed inset-0 bg-black bg-opacity-50 overflow-y-auto h-full w-full hidden" style="z-index: 50;">
-        <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-slate-800 border-slate-700 text-gray-100">
-            <div class="mt-3">
+        <div class="relative top-20 mx-auto p-0 w-96 shadow-lg rounded-md">
+            <div class="card">
+                <div class="card-body">
                 <h3 class="text-lg font-medium text-gray-100 mb-4">Reject Borrow Request</h3>
                 <form id="rejectForm" method="POST">
                     @csrf
@@ -135,10 +136,11 @@
                         <textarea name="rejection_reason" id="rejection_reason" rows="3" class="mt-1 block w-full border-slate-700 rounded-md shadow-sm bg-slate-900 text-gray-100" required></textarea>
                     </div>
                     <div class="flex justify-end space-x-2">
-                        <button type="button" onclick="closeRejectModal()" class="px-4 py-2 bg-slate-700 text-gray-100 rounded-md hover:bg-slate-600">Cancel</button>
-                        <button type="submit" class="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700">Reject</button>
+                        <button type="button" onclick="closeRejectModal()" class="btn-secondary">Cancel</button>
+                        <button type="submit" class="btn-primary">Reject</button>
                     </div>
                 </form>
+                </div>
             </div>
         </div>
     </div>

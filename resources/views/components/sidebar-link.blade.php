@@ -53,5 +53,5 @@
             </svg>
             @break
     @endswitch
-    <span class="text-sm font-medium">{{ $label }}</span>
+    <span class="text-sm font-medium sidebar-label">{{ $label }}</span>
 </a>

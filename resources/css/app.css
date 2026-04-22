@@ -9,6 +9,11 @@
     background: radial-gradient(circle at top left, rgba(100, 200, 255, 0.15), transparent 35%), radial-gradient(circle at bottom right, rgba(150, 50, 255, 0.15), transparent 25%), #0a1423;
     color: #c8f0ff;
   }
+
+  /* Smooth scroll for in-page anchors */
+  html {
+    scroll-behavior: smooth;
+  }
 }
 
 @layer utilities {
@@ -38,8 +43,68 @@
     @apply inline-flex items-center justify-center rounded-full bg-gradient-to-r from-cyan-400 to-blue-400 text-white px-4 py-2 text-sm font-semibold shadow-lg shadow-cyan-400/20 hover:from-cyan-300 hover:to-blue-300 transition ease-in-out duration-200;
   }
 
+  /* Button click animation: subtle scale + shadow reduction */
+  .btn-primary,
+  .btn-secondary {
+    transition: transform 140ms ease, box-shadow 140ms ease;
+  }
+  .btn-primary:active,
+  .btn-secondary:active {
+    transform: translateY(1px) scale(0.98);
+    box-shadow: none;
+  }
+
+  /* Add a reusable 'click-animate' utility for other buttons */
+  .click-animate {
+    transition: transform 140ms ease, box-shadow 140ms ease;
+  }
+  .click-animate:active {
+    transform: translateY(1px) scale(0.98);
+  }
+
   .btn-secondary {
     @apply inline-flex items-center justify-center rounded-full border border-blue-700 bg-slate-900 text-slate-200 px-4 py-2 text-sm font-semibold hover:bg-slate-800 transition ease-in-out duration-200;
+  }
+
+  /* Sidebar collapsed state: hide labels and reduce padding */
+  .sidebar.collapsed .sidebar-label {
+    display: none;
+  }
+
+  .sidebar.collapsed a {
+    padding-left: .75rem; /* align icons */
+    padding-right: .75rem;
+    justify-content: center;
+  }
+
+  /* Small width for collapsed sidebar, adjust link icon size */
+  .sidebar.collapsed svg {
+    margin: 0 auto;
+  }
+
+  /* Sidebar transition and widths */
+  .sidebar {
+    width: 14rem; /* 56 */
+    transition: width 180ms ease, transform 180ms ease, background-color 200ms ease;
+    will-change: width, transform;
+  }
+
+  .sidebar.collapsed {
+    width: 4rem; /* 16 */
+  }
+
+  /* Global card/panel utilities for consistent spacing */
+  .card {
+    @apply bg-surface overflow-hidden shadow-sm sm:rounded-lg;
+  }
+
+  .card-body {
+    @apply p-6;
+  }
+
+  .card-header {
+    @apply px-6 py-4 border-b;
+    border-color: rgba(40, 100, 150, 0.08);
   }
 
   .primary {

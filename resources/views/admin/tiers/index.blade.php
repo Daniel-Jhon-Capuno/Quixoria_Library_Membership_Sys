@@ -8,14 +8,15 @@
     <div class="py-12">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
             <div class="mb-4 flex justify-between">
-                <a href="{{ route('admin.tiers.create') }}" class="inline-flex items-center px-4 py-2 bg-gray-700 border border-transparent rounded-md font-semibold text-gray-100 hover:bg-gray-600">Add Tier</a>
+                <a href="{{ route('admin.tiers.create') }}" class="btn-primary">Add Tier</a>
             </div>
 
             @if(session('success'))
                 <div class="mb-4 p-4 bg-slate-800 border border-slate-700 text-green-200 rounded-md">{{ session('success') }}</div>
             @endif
 
-            <div class="bg-slate-800 shadow-sm rounded-lg overflow-hidden">
+            <div class="card">
+                <div class="card-body p-0">
                 <table class="min-w-full divide-y divide-slate-700">
                     <thead class="bg-slate-800">
                         <tr>

@@ -24,8 +24,8 @@
     <!-- Subscription Status -->
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
         <!-- Subscription Card -->
-        <div class="lg:col-span-2 rounded-xl p-6 shadow-card"
-             style="background-color: rgb(var(--surface-primary)); border: 1px solid rgb(var(--border-primary));">
+        <div class="lg:col-span-2 card">
+                <div class="card-body">
                 <h3 class="font-semibold mb-4 text-gray-100">Subscription Status</h3>
             @if($subscription ?? null)
                 <div class="space-y-4">
@@ -63,6 +63,7 @@
                     </a>
                 </div>
             @endif
+            </div>
         </div>
 
         <!-- Quick Stats -->
@@ -84,8 +85,8 @@
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
         <!-- Active Borrowings -->
         <div class="lg:col-span-2">
-            <div class="rounded-xl p-6 shadow-card"
-                 style="background-color: rgb(var(--surface-primary)); border: 1px solid rgb(var(--border-primary));">
+            <div class="card">
+                <div class="card-body">
                 <h3 class="font-semibold mb-6" style="color: rgb(var(--text-primary));">My Active Borrows</h3>
                 @if(($activeBorrows ?? collect())->count() > 0)
                     <div class="space-y-3">
@@ -127,14 +128,15 @@
                         <a href="{{ route('student.book-catalog.index') }}" class="mt-3 text-primary hover:text-primary-dark transition font-medium">Browse our collection →</a>
                     </div>
                 @endif
+                </div>
             </div>
         </div>
 
-        <!-- Sidebar -->
+            <!-- Sidebar -->
         <div class="space-y-4">
             <!-- Reservations -->
-            <div class="rounded-xl p-6 shadow-card"
-                 style="background-color: rgb(var(--surface-primary)); border: 1px solid rgb(var(--border-primary));">
+            <div class="card">
+                <div class="card-body">
                 <h4 class="font-semibold mb-4" style="color: rgb(var(--text-primary));">Reservations</h4>
                 @if(($reservations ?? collect())->count() > 0)
                     <div class="space-y-3">
@@ -151,11 +153,12 @@
                 @else
                     <p class="text-center text-sm py-4" style="color: rgb(var(--text-secondary));">No active reservations</p>
                 @endif
+                </div>
             </div>
 
             <!-- Quick Stats -->
-            <div class="rounded-xl p-6 shadow-card"
-                 style="background-color: rgb(var(--surface-primary)); border: 1px solid rgb(var(--border-primary));">
+            <div class="card">
+                <div class="card-body">
                 <h4 class="font-semibold mb-4" style="color: rgb(var(--text-primary));">Account</h4>
                 <div class="space-y-3">
                     <div class="flex justify-between text-sm">
@@ -170,6 +173,7 @@
                         <span style="color: rgb(var(--text-secondary));">Late Fees</span>
                         <span style="color: rgb(var(--text-primary));">${{ number_format($lateFees ?? 0, 2) }}</span>
                     </div>
+                </div>
                 </div>
             </div>
 

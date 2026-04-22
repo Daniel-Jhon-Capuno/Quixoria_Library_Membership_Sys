@@ -27,8 +27,14 @@ Route::get('/', function () {
         };
     }
 
-    return redirect()->route('login');
+    // Show public marketing landing page to unauthenticated visitors
+    return view('landing');
 });
+
+// Public marketing/landing page (uses brand colors)
+Route::get('/landing', function () {
+    return view('landing');
+})->name('landing');
 
 Route::get('/dashboard', function () {
     return view('dashboard');
@@ -68,6 +74,8 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::get('reports/student-activity', [ReportController::class, 'studentActivity'])->name('reports.student-activity');
     Route::get('reports/staff-activity', [ReportController::class, 'staffActivity'])->name('reports.staff-activity');
     Route::get('reports/audit-logs', [ReportController::class, 'auditLogs'])->name('reports.audit-logs');
+    // Exports for reports (CSV or PDF). Example: /admin/reports/most-borrowed-books/export?format=csv
+    Route::get('reports/{report}/export', [ReportController::class, 'export'])->name('reports.export');
 });
 
 Route::middleware(['auth', 'role:staff'])->prefix('staff')->name('staff.')->group(function () {

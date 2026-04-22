@@ -150,7 +150,8 @@
 
     <!-- Revenue and Stats Row -->
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-        <div class="rounded-xl p-6 shadow-card bg-slate-800 border border-slate-700">
+        <div class="card">
+            <div class="card-body">
             <h3 class="font-semibold mb-4 text-gray-100">Revenue</h3>
             <p class="text-4xl font-bold mb-2 text-gray-100">${{ number_format($monthlyRevenue ?? 0, 2) }}</p>
             <p class="text-sm mb-6 text-gray-400">This month</p>
@@ -168,9 +169,11 @@
                     <span class="font-semibold text-gray-100">{{ $availableBooks ?? 0 }}</span>
                 </div>
             </div>
+            </div>
         </div>
 
-        <div class="rounded-xl p-6 shadow-card bg-slate-800 border border-slate-700">
+        <div class="card">
+            <div class="card-body">
             <h3 class="font-semibold mb-4 text-gray-100">Quick Stats</h3>
             <div class="space-y-4">
                 <div>
@@ -186,9 +189,11 @@
                     <p class="text-2xl font-bold mt-1 text-gray-100">99.8%</p>
                 </div>
             </div>
+            </div>
         </div>
 
-        <div class="rounded-xl p-6 shadow-card bg-slate-800 border border-slate-700">
+        <div class="card">
+            <div class="card-body">
             <h3 class="font-semibold mb-4 text-gray-100">Status</h3>
             <div class="space-y-3">
                 <div class="flex items-center justify-between">
@@ -204,13 +209,14 @@
                     <span class="px-2 py-1 rounded text-xs font-medium bg-slate-700 text-gray-100">Fast</span>
                 </div>
             </div>
+            </div>
         </div>
     </div>
 
     <!-- Recent Activity -->
-    <div class="rounded-xl p-6 shadow-card"
-         style="background-color: rgb(var(--surface-primary)); border: 1px solid rgb(var(--border-primary));">
-        <h3 class="font-semibold mb-6" style="color: rgb(var(--text-primary)); font-size: 1.125rem;">Recent Activity</h3>
+    <div class="card">
+        <div class="card-body">
+            <h3 class="card-header font-semibold mb-6" style="color: rgb(var(--text-primary)); font-size: 1.125rem;">Recent Activity</h3>
         <div class="overflow-x-auto">
             <table class="w-full">
                 <thead>

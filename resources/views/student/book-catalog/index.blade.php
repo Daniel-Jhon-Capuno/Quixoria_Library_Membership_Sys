@@ -6,8 +6,8 @@
     <div class="py-12">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
             <!-- Search and Filters -->
-            <div class="bg-slate-800 overflow-hidden shadow-sm sm:rounded-lg mb-6">
-                <div class="p-6">
+            <div class="card mb-6">
+                <div class="card-body">
                     <form method="GET" action="{{ route('student.book-catalog.index') }}" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
                         <!-- Search -->
                         <div class="lg:col-span-2">
@@ -66,10 +66,10 @@
                 </div>
             </div>
 
-            <!-- Books Grid -->
+                <!-- Books Grid -->
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                 @forelse($books as $book)
-                <div class="bg-slate-800 overflow-hidden shadow-sm sm:rounded-lg">
+                <div class="card">
                     <div class="aspect-w-3 aspect-h-4 bg-slate-600">
                         @if($book->cover_image)
                             <img src="{{ asset('storage/' . $book->cover_image) }}"
@@ -166,8 +166,8 @@
                 </div>
                 @empty
                 <div class="col-span-full">
-                    <div class="bg-slate-800 overflow-hidden shadow-sm sm:rounded-lg">
-                        <div class="p-12 text-center">
+                    <div class="card">
+                        <div class="card-body p-12 text-center">
                             <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
                             </svg>
