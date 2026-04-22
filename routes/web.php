@@ -44,12 +44,23 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::patch('books/{book}/archive', [BookController::class, 'archive'])
         ->name('books.archive');
     Route::resource('subscriptions', SubscriptionController::class)->only(['index', 'show']);
+    Route::get('subscriptions/debug/{user}', [SubscriptionController::class, 'debug'])->name('subscriptions.debug');
     Route::post('subscriptions/override/{user}', [SubscriptionController::class, 'override'])
         ->name('subscriptions.override');
     Route::post('subscriptions/quick-fix/{user}', [SubscriptionController::class, 'quickFix'])
         ->name('subscriptions.quick-fix');
+    Route::post('subscriptions/force/{user}', [SubscriptionController::class, 'forceActivate'])
+        ->name('subscriptions.force');
     Route::post('subscriptions/adjust/{subscription}', [SubscriptionController::class, 'adjust'])
         ->name('subscriptions.adjust');
+    // Admin confirm/reject pending subscriptions
+    Route::post('subscriptions/{subscription}/confirm', [SubscriptionController::class, 'confirm'])
+        ->name('subscriptions.confirm');
+    Route::post('subscriptions/{subscription}/reject', [SubscriptionController::class, 'reject'])
+        ->name('subscriptions.reject');
+    Route::get('subscriptions/pending', [SubscriptionController::class, 'pending'])->name('subscriptions.pending');
+    Route::post('subscriptions/bulk-confirm', [SubscriptionController::class, 'bulkConfirm'])->name('subscriptions.bulk-confirm');
+    Route::post('subscriptions/bulk-reject', [SubscriptionController::class, 'bulkReject'])->name('subscriptions.bulk-reject');
     Route::get('reports', [ReportController::class, 'index'])->name('reports.index');
     Route::get('reports/most-borrowed-books', [ReportController::class, 'mostBorrowedBooks'])->name('reports.most-borrowed-books');
     Route::get('reports/overdue-statistics', [ReportController::class, 'overdueStatistics'])->name('reports.overdue-statistics');

@@ -9,6 +9,8 @@ use App\Models\Transaction;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Notification;
+use App\Notifications\AdminNewSubscriptionNotification;
 use Carbon\Carbon;
 
 class SubscriptionController extends Controller
@@ -17,6 +19,10 @@ class SubscriptionController extends Controller
     {
         $user = Auth::user();
         $currentSubscription = $user->subscription;
+        $pendingSubscription = Subscription::where('user_id', $user->id)
+            ->where('status', 'pending')
+            ->orderBy('created_at', 'desc')
+            ->first();
 
         if ($currentSubscription) {
             $tier = $currentSubscription->membershipTier;
@@ -33,10 +39,10 @@ class SubscriptionController extends Controller
             ));
         }
 
-        // No active subscription - show available tiers
+        // No active subscription - show available tiers and pending subscription if any
         $tiers = MembershipTier::orderBy('priority_level')->get();
 
-        return view('student.subscription.index', compact('tiers'));
+        return view('student.subscription.index', compact('tiers', 'pendingSubscription'));
     }
 
     public function purchase(Request $request)
@@ -54,30 +60,34 @@ class SubscriptionController extends Controller
 
         $tier = MembershipTier::findOrFail($request->tier_id);
 
-        DB::transaction(function () use ($user, $tier) {
-            // Create subscription
+        DB::transaction(function () use ($user, $tier, & $subscription) {
+            // Create subscription in pending state for admin approval
             $subscription = Subscription::create([
                 'user_id' => $user->id,
                 'membership_tier_id' => $tier->id,
-                'status' => 'active',
+                'status' => 'pending',
                 'starts_at' => now(),
                 'ends_at' => now()->addMonth(),
                 'amount_paid' => $tier->monthly_fee,
             ]);
 
-            // Create transaction record
+            // Record the payment/intent
             Transaction::create([
                 'user_id' => $user->id,
                 'subscription_id' => $subscription->id,
                 'type' => 'payment',
                 'amount' => $tier->monthly_fee,
-                'reference_note' => "Purchase of {$tier->name} tier",
+                'reference_note' => "Purchase request for {$tier->name} tier",
                 'processed_by' => $user->id,
             ]);
         });
 
+        // Notify admins to review/confirm the pending subscription
+        $admins = \App\Models\User::where('role', 'admin')->get();
+        Notification::send($admins, new AdminNewSubscriptionNotification($subscription));
+
         return redirect()->route('student.subscription.index')
-            ->with('success', 'Subscription purchased successfully!');
+            ->with('success', 'Subscription request submitted for admin approval!');
     }
 
     public function upgrade(Request $request)

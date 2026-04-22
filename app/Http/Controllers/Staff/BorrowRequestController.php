@@ -77,10 +77,11 @@ class BorrowRequestController extends Controller
         try {
             $student = $borrowRequest->student;
             $book = $borrowRequest->book;
-            $tier = $student->subscription?->membershipTier;
+            $subscription = $student->subscription;
+            $tier = $subscription?->membershipTier;
 
-            // 1. Check active subscription
-            if (!$student->subscription || $student->subscription->ends_at <= now()) {
+            // 1. Check active subscription (guard against null ends_at)
+            if (!$subscription || ($subscription->ends_at && $subscription->ends_at->lte(now()))) {
                 $message = 'Student does not have an active subscription.';
                 Log::warning('Borrow confirm validation failed - subscription', ['borrow_request_id' => $borrowRequest->id, 'student_id' => $student->id, 'reason' => $message]);
                 if (request()->expectsJson()) {
@@ -121,28 +122,10 @@ class BorrowRequestController extends Controller
                 return back()->with('error', $message);
             }
 
-            // 3b. Check monthly borrow limit (if configured)
-            if (!empty($tier->books_per_month)) {
-                $monthStart = now()->startOfMonth();
-                $monthEnd = now()->endOfMonth();
-                $monthlyBorrows = BorrowRequest::where('user_id', $student->id)
-                    ->whereIn('status', ['active', 'overdue', 'pending'])
-                    ->whereBetween('created_at', [$monthStart, $monthEnd])
-                    ->where('id', '!=', $borrowRequest->id)
-                    ->count();
-
-                if ($monthlyBorrows >= $tier->books_per_month) {
-                    $message = 'Student has reached their monthly borrow limit.';
-                    Log::warning('Borrow confirm validation failed - monthly limit', ['borrow_request_id' => $borrowRequest->id, 'student_id' => $student->id, 'monthlyBorrows' => $monthlyBorrows, 'limit' => $tier->books_per_month]);
-                    if (request()->expectsJson()) {
-                        return response()->json(['success' => false, 'message' => $message], 422);
-                    }
-                    return back()->with('error', $message);
-                }
-            }
+            // (monthly limits removed — enforcement is weekly-only)
 
             // 4. Check for overdue books
-            $overdueCount = BorrowRequest::where('user_id', $student->id)
+                $overdueCount = BorrowRequest::where('user_id', $student->id)
                 ->whereIn('status', ['active', 'overdue'])
                 ->where('due_at', '<', now())
                 ->count();
@@ -178,24 +161,9 @@ class BorrowRequestController extends Controller
                     ->whereIn('status', ['pending', 'active', 'returned', 'overdue'])
                     ->whereBetween('created_at', [$weekStart, $weekEnd])
                     ->count();
-                $tierLimit = $student->subscription->membershipTier->borrow_limit_per_week;
-
-                $monthlyBorrows = 0;
-                $monthlyLimit = null;
-                if (!empty($student->subscription->membershipTier->books_per_month)) {
-                    $monthStart = now()->startOfMonth();
-                    $monthEnd = now()->endOfMonth();
-                    $monthlyBorrows = BorrowRequest::where('user_id', $student->id)
-                        ->whereIn('status', ['pending', 'active', 'returned', 'overdue'])
-                        ->whereBetween('created_at', [$monthStart, $monthEnd])
-                        ->count();
-                    $monthlyLimit = $student->subscription->membershipTier->books_per_month;
-                }
+                $tierLimit = $subscription->membershipTier->borrow_limit_per_week;
 
                 $event = new BorrowUsageUpdated($student->id, $weeklyBorrows, $tierLimit);
-                $event->monthlyBorrows = $monthlyBorrows;
-                $event->monthlyLimit = $monthlyLimit;
-                $event->atMonthlyLimit = $monthlyLimit ? ($monthlyBorrows >= $monthlyLimit) : false;
                 event($event);
             } catch (\Throwable $e) {
                 Log::warning('Failed to broadcast borrow usage update', ['exception' => $e->getMessage()]);

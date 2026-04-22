@@ -11,11 +11,11 @@
     <!-- Alert Banners -->
     @if(($overdueBorrows ?? collect())->count() > 0)
         <div class="mb-6 rounded-xl p-6 flex items-start gap-4 bg-danger/20 border border-danger/50">
-            <svg class="w-6 h-6 text-danger flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                <svg class="w-6 h-6 text-red-500 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
                 <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"></path>
             </svg>
             <div>
-                <p class="text-red-300 font-semibold">{{ count($overdueBorrows) }} Overdue Book(s)</p>
+                    <p class="text-red-400 font-semibold">{{ count($overdueBorrows) }} Overdue Book(s)</p>
                 <p class="text-sm mt-1" style="color: rgb(var(--text-secondary));">You have overdue items. Please return them as soon as possible to avoid late fees and maintain your borrowing privileges.</p>
             </div>
         </div>
@@ -26,37 +26,38 @@
         <!-- Subscription Card -->
         <div class="lg:col-span-2 rounded-xl p-6 shadow-card"
              style="background-color: rgb(var(--surface-primary)); border: 1px solid rgb(var(--border-primary));">
-            <h3 class="font-semibold mb-4" style="color: rgb(var(--text-primary));">Subscription Status</h3>
+                <h3 class="font-semibold mb-4 text-gray-100">Subscription Status</h3>
             @if($subscription ?? null)
                 <div class="space-y-4">
                     <div class="flex justify-between items-start">
                         <div>
-                            <p class="text-sm" style="color: rgb(var(--text-secondary));">Current Tier</p>
+                                <p class="text-sm text-gray-400">Current Tier</p>
                             <p class="text-2xl font-bold text-primary mt-1">{{ $subscription->membershipTier->name ?? 'N/A' }}</p>
                         </div>
-                        <span class="bg-primary/20 text-primary px-3 py-1 rounded text-sm font-medium">Active</span>
+                            <span class="bg-slate-700 text-gray-100 px-3 py-1 rounded text-sm font-medium">Active</span>
                     </div>
                     <div style="border-top-color: rgb(var(--border-primary));" class="border-t pt-4">
                         <div class="grid grid-cols-2 gap-4">
                             <div>
-                                <p class="text-xs" style="color: rgb(var(--text-secondary));">Books per Month</p>
-                                <p class="text-lg font-bold mt-1" style="color: rgb(var(--text-primary));">{{ $subscription->membershipTier->books_per_month ?? 0 }}</p>
+                                    <p class="text-xs text-gray-400">Books per Month</p>
+                                {{-- monthly allowance removed; show weekly limit instead --}}
+                                <p class="text-lg font-bold mt-1" style="color: rgb(var(--text-primary));">{{ $subscription->membershipTier->borrow_limit_per_week ?? 0 }}</p>
                             </div>
                             <div>
-                                <p class="text-xs" style="color: rgb(var(--text-secondary));">Borrow Period</p>
+                                    <p class="text-xs text-gray-400">Borrow Period</p>
                                 <p class="text-lg font-bold mt-1" style="color: rgb(var(--text-primary));">{{ $subscription->membershipTier->borrow_duration ?? 14 }} days</p>
                             </div>
                         </div>
                     </div>
                     <div style="border-top-color: rgb(var(--border-primary));" class="border-t pt-4">
-                        <p class="text-xs" style="color: rgb(var(--text-secondary));">Expires</p>
+                            <p class="text-xs text-gray-400">Expires</p>
                         <p class="font-semibold mt-1" style="color: rgb(var(--text-primary));">{{ $subscription->ends_at->format('M d, Y') ?? 'N/A' }}</p>
                         <p class="text-xs mt-1" style="color: rgb(var(--text-secondary));">{{ $subscription->ends_at->diffForHumans() ?? 'N/A' }}</p>
                     </div>
                 </div>
             @else
                 <div class="text-center py-6">
-                    <p class="mb-4" style="color: rgb(var(--text-secondary));">You don't have an active subscription</p>
+                        <p class="mb-4 text-gray-400">You don't have an active subscription</p>
                     <a href="{{ route('student.subscription.index') }}" class="inline-block px-4 py-2 bg-primary hover:bg-primary-dark rounded-lg text-white font-medium transition">
                         Get Subscription
                     </a>

@@ -33,7 +33,9 @@ class User extends Authenticatable
 
     public function subscription()
     {
-        return $this->hasOne(Subscription::class)->where('status', 'active');
+        // Prefer the most recently created active subscription if multiple exist.
+        // Use latestOfMany to ensure we always resolve the newest active subscription reliably.
+        return $this->hasOne(Subscription::class)->where('status', 'active')->latestOfMany('created_at');
     }
 
     public function borrowRequests()

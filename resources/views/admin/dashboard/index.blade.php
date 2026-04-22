@@ -1,15 +1,15 @@
 <x-app-layout>
     <x-slot name="header">
         <div class="flex items-center justify-between">
-            <div>
-                <h1 class="text-3xl font-bold" style="color: rgb(var(--text-primary));">Dashboard</h1>
-                <p class="text-sm mt-1" style="color: rgb(var(--text-secondary));">Welcome back! Here's what's happening in your library.</p>
+                <div>
+                <h1 class="text-3xl font-bold text-gray-100">Dashboard</h1>
+                <p class="text-sm mt-1 text-gray-400">Welcome back! Here's what's happening in your library.</p>
             </div>
             <div class="flex items-center gap-3">
-                <button class="px-4 py-2 rounded-lg text-white font-medium transition bg-primary hover:bg-primary-dark">
+                <button class="px-4 py-2 rounded-lg text-gray-100 font-medium transition bg-gray-700 hover:bg-gray-600">
                     Documentation
                 </button>
-                <button class="px-4 py-2 rounded-lg text-white font-medium transition bg-accent hover:bg-blue-600">
+                <button class="px-4 py-2 rounded-lg text-gray-100 font-medium transition bg-gray-700 hover:bg-gray-600">
                     Download Report
                 </button>
             </div>
@@ -150,61 +150,58 @@
 
     <!-- Revenue and Stats Row -->
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-        <div class="rounded-xl p-6 shadow-card"
-             style="background-color: rgb(var(--surface-primary)); border: 1px solid rgb(var(--border-primary));">
-            <h3 class="font-semibold mb-4" style="color: rgb(var(--text-primary));">Revenue</h3>
-            <p class="text-4xl font-bold mb-2" style="color: rgb(var(--accent-primary));">${{ number_format($monthlyRevenue ?? 0, 2) }}</p>
-            <p class="text-sm mb-6" style="color: rgb(var(--text-secondary));">This month</p>
+        <div class="rounded-xl p-6 shadow-card bg-slate-800 border border-slate-700">
+            <h3 class="font-semibold mb-4 text-gray-100">Revenue</h3>
+            <p class="text-4xl font-bold mb-2 text-gray-100">${{ number_format($monthlyRevenue ?? 0, 2) }}</p>
+            <p class="text-sm mb-6 text-gray-400">This month</p>
             <div class="space-y-3">
                 <div class="flex justify-between items-center text-sm">
-                    <span style="color: rgb(var(--text-secondary));">Subscriptions</span>
-                    <span class="font-semibold" style="color: rgb(var(--text-primary));">{{ $totalActiveSubscriptions ?? 0 }}</span>
+                    <span class="text-gray-400">Subscriptions</span>
+                    <span class="font-semibold text-gray-100">{{ $totalActiveSubscriptions ?? 0 }}</span>
                 </div>
                 <div class="flex justify-between items-center text-sm">
-                    <span style="color: rgb(var(--text-secondary));">Active Members</span>
-                    <span class="font-semibold" style="color: rgb(var(--text-primary));">{{ $activeStudents ?? 0 }}</span>
+                    <span class="text-gray-400">Active Members</span>
+                    <span class="font-semibold text-gray-100">{{ $activeStudents ?? 0 }}</span>
                 </div>
                 <div class="flex justify-between items-center text-sm">
-                    <span style="color: rgb(var(--text-secondary));">Available Books</span>
-                    <span class="font-semibold" style="color: rgb(var(--text-primary));">{{ $availableBooks ?? 0 }}</span>
+                    <span class="text-gray-400">Available Books</span>
+                    <span class="font-semibold text-gray-100">{{ $availableBooks ?? 0 }}</span>
                 </div>
             </div>
         </div>
 
-        <div class="rounded-xl p-6 shadow-card"
-             style="background-color: rgb(var(--surface-primary)); border: 1px solid rgb(var(--border-primary));">
-            <h3 class="font-semibold mb-4" style="color: rgb(var(--text-primary));">Quick Stats</h3>
+        <div class="rounded-xl p-6 shadow-card bg-slate-800 border border-slate-700">
+            <h3 class="font-semibold mb-4 text-gray-100">Quick Stats</h3>
             <div class="space-y-4">
                 <div>
-                    <p class="text-sm" style="color: rgb(var(--text-secondary));">Books Borrowed Today</p>
-                    <p class="text-2xl font-bold mt-1" style="color: rgb(var(--accent-secondary));">{{ rand(15, 45) }}</p>
+                    <p class="text-sm text-gray-400">Books Borrowed Today</p>
+                    <p class="text-2xl font-bold mt-1 text-gray-100">{{ rand(15, 45) }}</p>
                 </div>
                 <div>
-                    <p class="text-sm" style="color: rgb(var(--text-secondary));">New Registrations</p>
-                    <p class="text-2xl font-bold mt-1" style="color: rgb(var(--accent-secondary));">{{ rand(5, 15) }}</p>
+                    <p class="text-sm text-gray-400">New Registrations</p>
+                    <p class="text-2xl font-bold mt-1 text-gray-100">{{ rand(5, 15) }}</p>
                 </div>
                 <div>
-                    <p class="text-sm" style="color: rgb(var(--text-secondary));">System Health</p>
-                    <p class="text-2xl font-bold mt-1" style="color: rgb(var(--accent-primary));">99.8%</p>
+                    <p class="text-sm text-gray-400">System Health</p>
+                    <p class="text-2xl font-bold mt-1 text-gray-100">99.8%</p>
                 </div>
             </div>
         </div>
 
-        <div class="rounded-xl p-6 shadow-card"
-             style="background-color: rgb(var(--surface-primary)); border: 1px solid rgb(var(--border-primary));">
-            <h3 class="font-semibold mb-4" style="color: rgb(var(--text-primary));">Status</h3>
+        <div class="rounded-xl p-6 shadow-card bg-slate-800 border border-slate-700">
+            <h3 class="font-semibold mb-4 text-gray-100">Status</h3>
             <div class="space-y-3">
                 <div class="flex items-center justify-between">
-                    <span style="color: rgb(var(--text-secondary));">Server Status</span>
-                    <span class="px-2 py-1 rounded text-xs font-medium" style="background-color: rgba(0, 255, 200, 0.2); color: rgb(var(--accent-primary));">Online</span>
+                    <span class="text-gray-400">Server Status</span>
+                    <span class="px-2 py-1 rounded text-xs font-medium bg-slate-700 text-gray-100">Online</span>
                 </div>
                 <div class="flex items-center justify-between">
-                    <span style="color: rgb(var(--text-secondary));">Database</span>
-                    <span class="px-2 py-1 rounded text-xs font-medium" style="background-color: rgba(100, 200, 255, 0.2); color: rgb(var(--accent-secondary));">Connected</span>
+                    <span class="text-gray-400">Database</span>
+                    <span class="px-2 py-1 rounded text-xs font-medium bg-slate-700 text-gray-100">Connected</span>
                 </div>
                 <div class="flex items-center justify-between">
-                    <span style="color: rgb(var(--text-secondary));">API Response</span>
-                    <span class="px-2 py-1 rounded text-xs font-medium" style="background-color: rgba(0, 255, 200, 0.2); color: rgb(var(--accent-primary));">Fast</span>
+                    <span class="text-gray-400">API Response</span>
+                    <span class="px-2 py-1 rounded text-xs font-medium bg-slate-700 text-gray-100">Fast</span>
                 </div>
             </div>
         </div>

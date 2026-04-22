@@ -48,10 +48,10 @@
                                 <div class="flex items-start">
                                     <div class="flex-1">
                                         <p class="text-sm font-medium text-gray-900">
-                                            {{ $notification->data['title'] ?? 'Notification' }}
+                                            {{ data_get($notification->data, 'title') ?? 'Notification' }}
                                         </p>
                                         <p class="text-sm text-gray-600 mt-1">
-                                            {{ $notification->data['message'] }}
+                                            {{ data_get($notification->data, 'message') ?? data_get($notification->data, 'body') ?? data_get($notification->data, 'text') ?? '' }}
                                         </p>
                                         <p class="text-xs text-gray-400 mt-1">
                                             {{ $notification->created_at->diffForHumans() }}

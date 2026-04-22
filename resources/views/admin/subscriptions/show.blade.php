@@ -1,33 +1,33 @@
 <x-app-layout>
     <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-800 leading-tight">Subscription Details</h2>
+        <h2 class="font-semibold text-xl text-gray-100 leading-tight">Subscription Details</h2>
     </x-slot>
 
     <div class="py-12">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
             @if(session('success'))
-                <div class="mb-4 p-4 bg-green-100 border border-green-200 text-green-800 rounded-md">{{ session('success') }}</div>
+                <div class="mb-4 p-4 bg-slate-800 border border-slate-700 text-green-200 rounded-md">{{ session('success') }}</div>
             @endif
 
             <!-- Subscription Details -->
-            <div class="bg-white shadow-sm rounded-lg p-6 mb-6">
-                <h3 class="text-lg font-medium text-gray-900 mb-4">Subscription Information</h3>
+            <div class="bg-slate-800 shadow-sm rounded-lg p-6 mb-6">
+                <h3 class="text-lg font-medium text-gray-100 mb-4">Subscription Information</h3>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
-                        <label class="block text-sm font-medium text-gray-700">User</label>
-                        <p class="mt-1 text-sm text-gray-900">{{ $subscription->user->name }} ({{ $subscription->user->email }})</p>
+                        <label class="block text-sm font-medium text-gray-300">User</label>
+                        <p class="mt-1 text-sm text-gray-100">{{ $subscription->user->name }} ({{ $subscription->user->email }})</p>
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-gray-700">Membership Tier</label>
-                        <p class="mt-1 text-sm text-gray-900">{{ $subscription->membershipTier->name }}</p>
+                        <label class="block text-sm font-medium text-gray-300">Membership Tier</label>
+                        <p class="mt-1 text-sm text-gray-100">{{ $subscription->membershipTier->name }}</p>
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-gray-700">Status</label>
+                        <label class="block text-sm font-medium text-gray-300">Status</label>
                         <span class="mt-1 px-2 inline-flex text-xs leading-5 font-semibold rounded-full
-                            @if($subscription->status === 'active') bg-green-100 text-green-800
-                            @elseif($subscription->status === 'expired') bg-red-100 text-red-800
-                            @elseif($subscription->status === 'cancelled') bg-gray-100 text-gray-800
-                            @else bg-yellow-100 text-yellow-800 @endif">
+                            @if($subscription->status === 'active') bg-green-800 text-green-200
+                            @elseif($subscription->status === 'expired') bg-red-800 text-red-200
+                            @elseif($subscription->status === 'cancelled') bg-slate-700 text-gray-100
+                            @else bg-yellow-800 text-yellow-200 @endif">
                             {{ ucfirst($subscription->status) }}
                         </span>
                     </div>
@@ -59,38 +59,38 @@
             </div>
 
             <!-- Transaction History -->
-            <div class="bg-white shadow-sm rounded-lg p-6 mb-6">
-                <h3 class="text-lg font-medium text-gray-900 mb-4">Transaction History</h3>
+            <div class="bg-slate-800 shadow-sm rounded-lg p-6 mb-6">
+                <h3 class="text-lg font-medium text-gray-100 mb-4">Transaction History</h3>
                 <div class="overflow-x-auto">
-                    <table class="min-w-full divide-y divide-gray-200">
-                        <thead class="bg-gray-50">
+                    <table class="min-w-full divide-y divide-slate-700">
+                        <thead class="bg-slate-800">
                             <tr>
-                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
-                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
-                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
-                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Note</th>
-                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Processed By</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Date</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Type</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Amount</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Note</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Processed By</th>
                             </tr>
                         </thead>
-                        <tbody class="bg-white divide-y divide-gray-200">
+                        <tbody class="bg-transparent divide-y divide-slate-700">
                             @forelse($transactions as $transaction)
                                 <tr>
-                                    <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-900">{{ $transaction->created_at->format('M d, Y H:i') }}</td>
-                                    <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
+                                    <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-100">{{ $transaction->created_at->format('M d, Y H:i') }}</td>
+                                    <td class="px-4 py-4 whitespace-nowrap text-sm">
                                         <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full
-                                            @if($transaction->type === 'payment') bg-green-100 text-green-800
-                                            @elseif($transaction->type === 'refund') bg-red-100 text-red-800
-                                            @else bg-blue-100 text-blue-800 @endif">
+                                            @if($transaction->type === 'payment') bg-green-800 text-green-200
+                                            @elseif($transaction->type === 'refund') bg-red-800 text-red-200
+                                            @else bg-blue-800 text-blue-200 @endif">
                                             {{ ucfirst($transaction->type) }}
                                         </span>
                                     </td>
-                                    <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-900">${{ number_format($transaction->amount, 2) }}</td>
-                                    <td class="px-4 py-4 text-sm text-gray-900">{{ $transaction->reference_note ?: 'N/A' }}</td>
-                                    <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-900">{{ $transaction->processor->name }}</td>
+                                    <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-100">${{ number_format($transaction->amount, 2) }}</td>
+                                    <td class="px-4 py-4 text-sm text-gray-100">{{ $transaction->reference_note ?: 'N/A' }}</td>
+                                    <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-100">{{ $transaction->processor->name }}</td>
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="5" class="px-4 py-4 text-center text-sm text-gray-500">No transactions found</td>
+                                    <td colspan="5" class="px-4 py-4 text-center text-sm text-gray-400">No transactions found</td>
                                 </tr>
                             @endforelse
                         </tbody>
@@ -101,6 +101,24 @@
             <!-- Admin Actions -->
             <div class="bg-white shadow-sm rounded-lg p-6">
                 <h3 class="text-lg font-medium text-gray-900 mb-4">Admin Actions</h3>
+
+                @if($subscription->status === 'pending')
+                <div class="mb-6">
+                    <h4 class="text-md font-medium text-gray-900 mb-2">Pending Subscription Actions</h4>
+                    <div class="flex items-center gap-3">
+                        <form method="POST" action="{{ route('admin.subscriptions.confirm', $subscription) }}">
+                            @csrf
+                            <button type="submit" class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700">Approve Subscription</button>
+                        </form>
+
+                        <form method="POST" action="{{ route('admin.subscriptions.reject', $subscription) }}" class="flex items-center gap-2">
+                            @csrf
+                            <input type="text" name="reason" placeholder="Optional rejection reason" class="border border-gray-300 rounded-md px-2 py-1" />
+                            <button type="submit" class="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700">Reject Subscription</button>
+                        </form>
+                    </div>
+                </div>
+                @endif
 
                 <!-- Manual Adjustment Form -->
                 <div class="mb-6">
@@ -156,6 +174,26 @@
                         </div>
                         <div class="flex items-end">
                             <button type="submit" class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700">Override Tier</button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Force Activate Form -->
+                <div class="mb-6 border-t pt-6">
+                    <h4 class="text-md font-medium text-gray-900 mb-2">Force Activate Tier</h4>
+                    <form method="POST" action="{{ route('admin.subscriptions.force', $subscription->user) }}" class="grid gap-4 sm:grid-cols-2">
+                        @csrf
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Immediate Tier</label>
+                            <select name="membership_tier_id" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm" required>
+                                <option value="">Select Tier</option>
+                                @foreach(\App\Models\MembershipTier::orderBy('priority_level')->get() as $tierOption)
+                                    <option value="{{ $tierOption->id }}">{{ $tierOption->name }} ({{ number_format($tierOption->monthly_fee,2) }}/mo)</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="flex items-end">
+                            <button type="submit" class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700">Force Activate Now</button>
                         </div>
                     </form>
                 </div>

@@ -36,8 +36,9 @@ class BorrowRequestController extends Controller
     {
         $user = Auth::user();
 
-        // 1. Check active subscription
-        if (!$user->subscription || $user->subscription->ends_at <= now()) {
+        // 1. Check active subscription (guard against null ends_at)
+        $subscription = $user->subscription;
+        if (!$subscription || ($subscription->ends_at && $subscription->ends_at->lte(now()))) {
             Log::warning('Student borrow request failed - no active subscription', ['user_id' => $user->id, 'book_id' => $bookId]);
             return redirect()->back()->with('error', 'You must have an active subscription to borrow books.');
         }
@@ -61,25 +62,13 @@ class BorrowRequestController extends Controller
             ->whereBetween('created_at', [$weekStart, $weekEnd])
             ->count();
 
-        $tier = $user->subscription->membershipTier;
+        $tier = $subscription->membershipTier;
         if ($weeklyBorrows >= $tier->borrow_limit_per_week) {
             Log::warning('Student borrow request failed - weekly limit reached', ['user_id' => $user->id, 'book_id' => $bookId, 'weeklyBorrows' => $weeklyBorrows, 'limit' => $tier->borrow_limit_per_week]);
             return redirect()->back()->with('error', 'You have reached your weekly borrow limit of ' . $tier->borrow_limit_per_week . ' books.');
         }
 
-        // 3b. Check monthly borrow limit (if configured on the tier)
-        if (!empty($tier->books_per_month)) {
-            $monthStart = now()->startOfMonth();
-            $monthEnd = now()->endOfMonth();
-            $monthlyBorrows = BorrowRequest::where('user_id', $user->id)
-                ->whereIn('status', ['pending', 'active', 'returned', 'overdue'])
-                ->whereBetween('created_at', [$monthStart, $monthEnd])
-                ->count();
-
-            if ($monthlyBorrows >= $tier->books_per_month) {
-                return redirect()->back()->with('error', 'You have reached your monthly borrow limit of ' . $tier->books_per_month . ' books.');
-            }
-        }
+        // (monthly limits removed — enforcement is weekly-only)
 
         // 4. Check for overdue books
         $overdueCount = BorrowRequest::where('user_id', $user->id)
@@ -123,24 +112,9 @@ class BorrowRequestController extends Controller
             ->whereIn('status', ['pending', 'active', 'returned', 'overdue'])
             ->whereBetween('created_at', [$weekStart, $weekEnd])
             ->count();
-        $tierLimit = $user->subscription->membershipTier->borrow_limit_per_week;
-
-        $monthlyBorrows = 0;
-        $monthlyLimit = null;
-        if (!empty($user->subscription->membershipTier->books_per_month)) {
-            $monthStart = now()->startOfMonth();
-            $monthEnd = now()->endOfMonth();
-            $monthlyBorrows = BorrowRequest::where('user_id', $user->id)
-                ->whereIn('status', ['pending', 'active', 'returned', 'overdue'])
-                ->whereBetween('created_at', [$monthStart, $monthEnd])
-                ->count();
-            $monthlyLimit = $user->subscription->membershipTier->books_per_month;
-        }
+        $tierLimit = $subscription->membershipTier->borrow_limit_per_week;
 
         $event = new BorrowUsageUpdated($user->id, $weeklyBorrows, $tierLimit);
-        $event->monthlyBorrows = $monthlyBorrows;
-        $event->monthlyLimit = $monthlyLimit;
-        $event->atMonthlyLimit = $monthlyLimit ? ($monthlyBorrows >= $monthlyLimit) : false;
         event($event);
 
         return redirect()->back()->with('success', 'Your borrow request has been submitted successfully. Staff will review it shortly.');

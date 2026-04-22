@@ -104,11 +104,13 @@ class BookCatalogController extends Controller
         $canBorrow = true;
         $borrowDisabledReason = null;
 
-        if (!$user->subscription || $user->subscription->ends_at <= now()) {
+        // Guard against missing subscription or expired ends_at
+        $subscription = $user->subscription;
+        if (!$subscription || ($subscription->ends_at && $subscription->ends_at->lte(now()))) {
             $canBorrow = false;
             $borrowDisabledReason = 'No active subscription';
         } else {
-            $tier = $user->subscription->membershipTier;
+            $tier = $subscription->membershipTier;
 
             // Check weekly borrow limit (count pending + active requests created this week)
             $weekStart = now()->startOfWeek();
@@ -134,24 +136,11 @@ class BookCatalogController extends Controller
                 $borrowDisabledReason = 'Has overdue books';
             }
             
-            // Check monthly borrow limit (if configured)
-            if (!empty($tier->books_per_month)) {
-                $monthStart = now()->startOfMonth();
-                $monthEnd = now()->endOfMonth();
-                $monthlyBorrows = BorrowRequest::where('user_id', $user->id)
-                    ->whereIn('status', ['pending', 'active', 'returned', 'overdue'])
-                    ->whereBetween('created_at', [$monthStart, $monthEnd])
-                    ->count();
-
-                if ($monthlyBorrows >= $tier->books_per_month) {
-                    $canBorrow = false;
-                    $borrowDisabledReason = 'Monthly borrow limit reached';
-                }
-            }
+            // (monthly limits removed — enforcement is weekly-only)
         }
 
         // Check if user can reserve
-        $canReserve = $user->subscription && $user->subscription->membershipTier->can_reserve;
+        $canReserve = $user && $user->subscription && $user->subscription->membershipTier->can_reserve;
 
         // Check if user already has a reservation for this book
         $hasReservation = Reservation::where('user_id', $user->id)
@@ -178,10 +167,6 @@ class BookCatalogController extends Controller
             $tierLimit = $user->subscription->membershipTier->borrow_limit_per_week;
         }
 
-        // Include monthly usage for UI
-        $monthlyBorrows = $monthlyBorrows ?? null;
-        $monthlyLimit = $user && $user->subscription ? $user->subscription->membershipTier->books_per_month : null;
-
         return view('student.book-catalog.show', compact(
             'book',
             'availableCopies',
@@ -191,9 +176,7 @@ class BookCatalogController extends Controller
             'hasReservation',
             'hasActiveRequest',
             'weeklyBorrows',
-            'tierLimit',
-            'monthlyBorrows',
-            'monthlyLimit'
+            'tierLimit'
         ));
     }
 
@@ -204,29 +187,21 @@ class BookCatalogController extends Controller
         $weeklyBorrows = 0;
         $tierLimit = null;
         $atLimit = false;
-        $monthlyBorrows = 0;
-        $monthlyLimit = null;
-        $atMonthlyLimit = false;
 
         if ($user && $user->subscription) {
-            $weekStart = now()->startOfWeek();
-            $weekEnd = now()->endOfWeek();
-            $weeklyBorrows = BorrowRequest::where('user_id', $user->id)
-                ->whereIn('status', ['pending', 'active', 'returned', 'overdue'])
-                ->whereBetween('created_at', [$weekStart, $weekEnd])
-                ->count();
-            $tierLimit = $user->subscription->membershipTier->borrow_limit_per_week;
-            $atLimit = $weeklyBorrows >= $tierLimit;
-            // monthly
-            if (!empty($user->subscription->membershipTier->books_per_month)) {
-                $monthStart = now()->startOfMonth();
-                $monthEnd = now()->endOfMonth();
-                $monthlyBorrows = BorrowRequest::where('user_id', $user->id)
+            $subscription = $user->subscription;
+            // guard against expired ends_at
+            if ($subscription && ($subscription->ends_at && $subscription->ends_at->lte(now()))) {
+                // expired subscription -> return default zeros
+            } else {
+                $weekStart = now()->startOfWeek();
+                $weekEnd = now()->endOfWeek();
+                $weeklyBorrows = BorrowRequest::where('user_id', $user->id)
                     ->whereIn('status', ['pending', 'active', 'returned', 'overdue'])
-                    ->whereBetween('created_at', [$monthStart, $monthEnd])
+                    ->whereBetween('created_at', [$weekStart, $weekEnd])
                     ->count();
-                $monthlyLimit = $user->subscription->membershipTier->books_per_month;
-                $atMonthlyLimit = $monthlyBorrows >= $monthlyLimit;
+                $tierLimit = $subscription->membershipTier->borrow_limit_per_week;
+                $atLimit = $weeklyBorrows >= $tierLimit;
             }
         }
 
@@ -234,9 +209,6 @@ class BookCatalogController extends Controller
             'weeklyBorrows' => $weeklyBorrows,
             'tierLimit' => $tierLimit,
             'atLimit' => $atLimit,
-            'monthlyBorrows' => $monthlyBorrows,
-            'monthlyLimit' => $monthlyLimit,
-            'atMonthlyLimit' => $atMonthlyLimit,
         ]);
     }
 }
