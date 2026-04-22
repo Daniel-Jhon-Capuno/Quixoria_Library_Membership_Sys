@@ -1,8 +1,7 @@
-# 1. Use the official PHP 8.4 Apache image
+# 1. Use PHP 8.4 (Required for your Laravel/Symfony version)
 FROM php:8.4-apache
 
-# 2. Install system dependencies and PHP extensions
-# Added libzip-dev and the zip extension
+# 2. Install all necessary system libraries
 RUN apt-get update && apt-get install -y \
     libpq-dev \
     libpng-dev \
@@ -12,31 +11,33 @@ RUN apt-get update && apt-get install -y \
     git \
     && docker-php-ext-install pdo pdo_pgsql gd zip
 
-# 3. Enable Apache mod_rewrite for Laravel routing
+# 3. Enable Apache mod_rewrite
 RUN a2enmod rewrite
 
 # 4. Set the working directory
 WORKDIR /var/www/html
 
-# 5. Copy the project files into the container
+# 5. Copy your project files
 COPY . .
 
-# 6. Install Composer (PHP package manager)
+# 6. Install Composer dependencies
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
-
-# We add --ignore-platform-req=ext-http if needed, but adding 'zip' above should fix your specific error
 RUN composer install --no-dev --optimize-autoloader
 
-# 7. Set permissions
-RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
+# 7. CRITICAL: Set the permissions for Render's user
+# We give full ownership to www-data and ensure storage is writable
+RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache && \
+    chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache
 
-# 8. Update Apache to point to Laravel's /public folder
+# 8. Point Apache to the Laravel public directory
 ENV APACHE_DOCUMENT_ROOT /var/www/html/public
 RUN sed -ri -e 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/sites-available/*.conf
 RUN sed -ri -e 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/apache2.conf /etc/apache2/conf-available/*.conf
 
-# 9. THE "MAGIC" COMMAND: Migrate, Cache, and Start
+# 9. THE STARTUP COMMAND
+# Migrates database, clears old cache, and starts the server
 CMD php artisan migrate --force && \
-    php artisan config:cache && \
-    php artisan route:cache && \
+    php artisan config:clear && \
+    php artisan route:clear && \
+    php artisan view:clear && \
     apache2-foreground
