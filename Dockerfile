@@ -47,11 +47,14 @@ WORKDIR /var/www/html
 # Copy full Laravel app
 COPY . .
 
-# Generate .env and app key from example
-RUN cp .env.example .env && php artisan key:generate --force
+# Copy .env before composer so it exists during install
+RUN cp .env.example .env
 
-# Install PHP dependencies
+# Install PHP dependencies (vendor/ is created here)
 RUN composer install --no-dev --optimize-autoloader --no-interaction
+
+# Now vendor/ exists, artisan can boot and generate the key
+RUN php artisan key:generate --force
 
 # Install frontend dependencies and build Vite assets
 RUN npm install --no-audit --no-fund && npm run build || true
