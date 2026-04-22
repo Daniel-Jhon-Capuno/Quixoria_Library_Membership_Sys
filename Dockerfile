@@ -1,5 +1,5 @@
-# 1. Use the official PHP 8.2 Apache image as a base
-FROM php:8.2-apache
+# 1. Use the official PHP 8.4 Apache image as a base
+FROM php:8.4-apache
 
 # 2. Install system dependencies and PHP extensions for Postgres
 RUN apt-get update && apt-get install -y \
