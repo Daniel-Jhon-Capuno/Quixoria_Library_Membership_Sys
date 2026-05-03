@@ -26,4 +26,20 @@ class Reservation extends Model
     {
         return $this->belongsTo(Book::class);
     }
+
+    /**
+     * Scope for active (waiting) reservations
+     */
+    public function scopeActive($query)
+    {
+        return $query->where('status', 'waiting');
+    }
+
+    /**
+     * Scope for ready reservations
+     */
+    public function scopeReady($query)
+    {
+        return $query->where('status', 'ready');
+    }
 }

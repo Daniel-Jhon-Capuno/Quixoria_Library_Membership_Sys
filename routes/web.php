@@ -85,6 +85,7 @@ Route::middleware(['auth', 'role:staff'])->prefix('staff')->name('staff.')->grou
     Route::post('borrow-requests/{id}/confirm', [StaffBorrowRequestController::class, 'confirm'])->name('borrow-requests.confirm');
     Route::get('borrow-requests/{id}/confirm', [StaffBorrowRequestController::class, 'showConfirm'])->name('borrow-requests.confirm.form');
     Route::post('borrow-requests/{id}/reject', [StaffBorrowRequestController::class, 'reject'])->name('borrow-requests.reject');
+    Route::post('borrow-requests/{id}/reject-return', [StaffBorrowRequestController::class, 'rejectReturn'])->name('borrow-requests.reject-return');
     Route::get('borrow-requests/{id}/reject', [StaffBorrowRequestController::class, 'showReject'])->name('borrow-requests.reject.form');
     Route::post('borrow-requests/{id}/check-in', [StaffBorrowRequestController::class, 'checkIn'])->name('borrow-requests.check-in');
     Route::get('deadline-dashboard', [DeadlineDashboardController::class, 'index'])->name('deadline-dashboard.index');
@@ -105,11 +106,12 @@ Route::middleware(['auth', 'role:student'])->prefix('student')->name('student.')
     Route::get('receipts', [StudentBorrowRequestController::class, 'receipts'])->name('receipts.index');
     Route::get('active-borrows', [ActiveBorrowController::class, 'index'])->name('active-borrows.index');
     Route::post('active-borrows/{id}/renew', [ActiveBorrowController::class, 'renew'])->name('active-borrows.renew');
+    Route::post('active-borrows/{id}/return-request', [ActiveBorrowController::class, 'returnRequest'])->name('active-borrows.return-request');
     Route::get('subscription', [StudentSubscriptionController::class, 'index'])->name('subscription.index');
     Route::post('subscription/purchase', [StudentSubscriptionController::class, 'purchase'])->name('subscription.purchase');
     Route::post('subscription/upgrade', [StudentSubscriptionController::class, 'upgrade'])->name('subscription.upgrade');
     Route::post('subscription/downgrade', [StudentSubscriptionController::class, 'downgrade'])->name('subscription.downgrade');
-    Route::post('subscription/cancel', [StudentSubscriptionController::class, 'cancel'])->name('subscription.cancel');
+    Route::delete('subscription/cancel', [StudentSubscriptionController::class, 'cancel'])->name('subscription.cancel');
     Route::post('reservations', [ReservationController::class, 'store'])->name('reservations.store');
 });
 
@@ -121,6 +123,9 @@ Route::middleware('auth')->group(function () {
 
     Route::get('/notifications/{id}/go', [\App\Http\Controllers\NotificationController::class, 'go'])->name('notifications.go');
 
+Route::get('/settings', function() {
+        return view('settings');
+    })->middleware('auth')->name('settings');
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');

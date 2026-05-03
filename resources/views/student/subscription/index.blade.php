@@ -7,251 +7,121 @@
 
     <div class="py-12">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-            <div class="card">
-                <div class="card-body text-gray-100">
-                    @if(isset($currentSubscription))
-                        <!-- Current Subscription Display -->
-                        <div class="card mb-6">
-                            <div class="card-body">
-                            <h3 class="text-lg font-semibold text-gray-100 mb-4">Current Subscription</h3>
+            @if (session('success'))
+                <div class="bg-green-100 dark:bg-green-900 border border-green-400 dark:border-green-600 text-green-700 dark:text-green-200 px-4 py-3 rounded mb-4">
+                    {{ session('success') }}
+                </div>
+            @endif
 
-                            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-300">Tier</label>
-                                    <p class="text-lg font-semibold text-gray-100">{{ $tier->name }}</p>
-                                </div>
+            @if ($errors->any())
+                <div class="bg-red-100 dark:bg-red-900 border border-red-400 dark:border-red-600 text-red-700 dark:text-red-200 px-4 py-3 rounded mb-4">
+                    <ul>
+                        @foreach ($errors->all() as $error)
+                            <li>{{ $error }}</li>
+                        @endforeach
+                    </ul>
+                </div>
+            @endif
 
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-300">Monthly Fee</label>
-                                    <p class="text-lg text-gray-100">${{ number_format($tier->monthly_fee, 2) }}</p>
-                                </div>
-
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-300">Borrow Limit</label>
-                                    <p class="text-lg text-gray-100">{{ $tier->borrow_limit_per_week }} books/week</p>
-                                </div>
-
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-200">Borrow Duration</label>
-                                    <p class="text-lg text-gray-100">{{ $tier->borrow_duration_days }} days</p>
-                                </div>
-
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-200">Renewal Limit</label>
-                                    <p class="text-lg text-gray-100">{{ $tier->renewal_limit }} times</p>
-                                </div>
-
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-200">Late Fee</label>
-                                    <p class="text-lg text-gray-100">${{ number_format($tier->late_fee_per_day, 2) }}/day</p>
-                                </div>
-                            </div>
-
-                                <div class="mt-4 pt-4 border-t border-slate-700">
-                                <div class="flex justify-between items-center">
-                                    <div>
-                                            <label class="block text-sm font-medium text-gray-300">Billing Date</label>
-                                            <p class="text-gray-100">{{ $currentSubscription->ends_at->format('M j, Y') }}</p>
-                                    </div>
-                                    <div class="text-right">
-                                            <p class="text-sm {{ $daysRemaining >= 0 ? 'text-gray-200' : 'text-red-400' }}">
-                                                {{ $renewalMessage }}
-                                            </p>
-                                    </div>
-                                </div>
-                            </div>
-
-                                <div class="mt-6 flex space-x-4">
-                                <form method="POST" action="{{ route('student.subscription.upgrade') }}" class="inline">
-                                    @csrf
-                                    <select name="tier_id" class="rounded-md border-slate-700 bg-slate-900 text-gray-200 focus:border-cyan-400 focus:ring-cyan-400 shadow-sm" required>
-                                        <option value="">Select tier to upgrade to</option>
-                                        @php
-                                            $nextTier = \App\Models\MembershipTier::where('priority_level', $tier->priority_level + 1)->first();
-                                        @endphp
-                                        @if($nextTier)
-                                            <option value="{{ $nextTier->id }}">{{ $nextTier->name }} - ${{ number_format($nextTier->monthly_fee, 2) }}/month</option>
-                                        @endif
-                                    </select>
-                                    <button type="submit" class="btn-primary ml-2">Upgrade</button>
-                                </form>
-
-                                <form method="POST" action="{{ route('student.subscription.downgrade') }}" class="inline">
-                                    @csrf
-                                    <select name="tier_id" class="rounded-md border-slate-700 bg-slate-900 text-gray-200 focus:border-cyan-400 focus:ring-cyan-400 shadow-sm" required>
-                                        <option value="">Select tier to downgrade to</option>
-                                        @foreach(\App\Models\MembershipTier::where('priority_level', '<', $tier->priority_level)->orderBy('priority_level', 'desc')->get() as $lowerTier)
-                                            <option value="{{ $lowerTier->id }}">{{ $lowerTier->name }} - ${{ number_format($lowerTier->monthly_fee, 2) }}/month</option>
-                                        @endforeach
-                                    </select>
-                                    <button type="submit" class="btn-primary ml-2">Downgrade</button>
-                                </form>
-
-                                <form method="POST" action="{{ route('student.subscription.cancel') }}" class="inline" onsubmit="return confirm('Are you sure you want to cancel your subscription? You will retain access until {{ $currentSubscription->ends_at->format('M j, Y') }}.')">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="submit" class="btn-secondary">Cancel Subscription</button>
-                                </form>
-                            </div>
-                            </div>
-                        </div>
-                    @elseif(isset($pendingSubscription))
-                        <!-- Pending Subscription Display -->
-                        <div class="card mb-6" style="background-color: rgba(255, 215, 0, 0.04);">
-                            <div class="card-body">
-                            <h3 class="text-lg font-semibold text-yellow-100 mb-4">Subscription Pending Approval</h3>
-                            <p class="text-sm text-yellow-200 mb-4">Thank you for your purchase. Your subscription request is pending admin approval. Once approved, your benefits will be active.</p>
-                            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                                <div>
-                                    <label class="block text-sm font-medium text-yellow-200">Tier</label>
-                                    <p class="text-lg font-semibold text-yellow-100">{{ $pendingSubscription->membershipTier->name }}</p>
-                                </div>
-                                <div>
-                                    <label class="block text-sm font-medium text-yellow-200">Borrow Limit</label>
-                                    <p class="text-lg text-yellow-100">{{ $pendingSubscription->membershipTier->borrow_limit_per_week }} books/week</p>
-                                </div>
-                                {{-- monthly allowance removed from UI per weekly-only policy --}}
-                            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+                @foreach($tiers as $tier)
+                    <div class="subscription-card group relative bg-gradient-to-b from-slate-800 via-slate-800/90 to-slate-900/80 backdrop-blur-xl rounded-2xl p-8 border border-slate-700 hover:border-cyan-400/60 transition-all duration-200 hover:shadow-2xl hover:shadow-cyan-500/20 hover:-translate-y-2 hover:scale-[1.02] h-full flex flex-col justify-between shadow-xl {{ $loop->first ? 'ring-2 ring-cyan-500/50 shadow-2xl shadow-cyan-500/30' : '' }}">
+                        {{-- Badges --}}
+                        <div class="flex gap-2 mb-6 absolute top-6 left-6 right-6">
+                            @if($currentTierId == $tier->id)
+                                <span class="bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 px-3 py-1 rounded-full text-sm font-bold">Current Plan</span>
+                            @elseif(isset($pendingSubscription) && $pendingSubscription->membership_tier_id == $tier->id)
+                                <span class="bg-amber-500/20 text-amber-400 border border-amber-500/40 px-3 py-1 rounded-full text-sm font-bold">Pending Approval</span>
+                            @endif
+                            @if($loop->first && $currentTierId != $tier->id)
+                                <span class="ml-auto bg-gradient-to-r from-cyan-500 to-blue-500 text-white px-3 py-1 rounded-full text-xs font-bold shadow-md">Most Popular</span>
+                            @endif
                         </div>
 
-                        <div class="mb-6">
-                            <h3 class="text-lg font-semibold text-gray-100 mb-4">Choose a Subscription Plan</h3>
+                        {{-- Card Content --}}
+                        <div class="flex flex-col flex-1">
+                            <h4 class="text-2xl font-bold text-white mb-2 mt-12 group-hover:text-cyan-300 transition-colors">{{ $tier->name }}</h4>
 
-                            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                                @foreach($tiers as $tier)
-                                    <div class="card" style="background-color: rgb(var(--bg-secondary)); border-color: rgba(40,100,150,0.04);">
-                                        <div class="card-body">
-                                        <div class="flex justify-between items-start mb-4">
-                                            <h4 class="text-xl font-bold">{{ $tier->name }}</h4>
-                                            @if($loop->first)
-                                                <span class="bg-slate-700 text-gray-100 text-xs px-2 py-1 rounded-full">Popular</span>
-                                            @endif
-                                        </div>
-
-                                        <div class="text-3xl font-bold text-gray-100 mb-4">${{ number_format($tier->monthly_fee, 2) }}
-                                            <span class="text-sm font-normal text-gray-400">/month</span>
-                                        </div>
-
-                                        <ul class="space-y-2 mb-6 text-gray-300">
-                                            <li class="flex items-center">{{ $tier->borrow_limit_per_week }} books per week</li>
-                                            <li class="flex items-center">{{ $tier->borrow_duration_days }} days borrow period</li>
-                                            <li class="flex items-center">Up to {{ $tier->renewal_limit }} renewals</li>
-                                        </ul>
-
-                                        <form method="POST" action="{{ route('student.subscription.purchase') }}" x-data="{confirming:false}">
-                                            @csrf
-                                            <input type="hidden" name="tier_id" value="{{ $tier->id }}">
-                                            <button type="button" @click.prevent="confirming = true" class="btn-primary w-full">Subscribe to {{ $tier->name }}</button>
-
-                                            <div x-show="confirming" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
-                                                <div class="bg-slate-800 rounded-lg p-6 max-w-md w-full border border-slate-700">
-                                                    <h4 class="text-lg font-semibold text-gray-100 mb-4">Confirm Purchase</h4>
-                                                    <p class="mb-4 text-gray-300">Are you sure you want to purchase the {{ $tier->name }} subscription for ${{ number_format($tier->monthly_fee,2) }} / month? This will be submitted for admin approval.</p>
-                                                    <div class="flex justify-end space-x-2">
-                                                        <button type="button" @click.prevent="confirming = false" class="btn-secondary">Cancel</button>
-                                                        <button type="submit" class="btn-primary">Confirm Purchase</button>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </form>
-                                        </div>
-                                    </div>
-                                @endforeach
+                            <div class="text-4xl font-black text-white mb-1 mt-2 drop-shadow-lg">
+                                ${{ number_format($tier->monthly_fee, 2) }}
                             </div>
-                        </div>
-                    @else
-                        <!-- No Subscription - Show Available Tiers -->
-                        <div class="mb-6">
-                            <h3 class="text-lg font-semibold text-gray-100 mb-4">Choose a Subscription Plan</h3>
+                            <p class="text-slate-400 text-lg font-medium mb-8">per month</p>
 
-                            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                                @foreach($tiers as $tier)
-                                    <div class="border border-slate-700 rounded-lg p-6 {{ $loop->first ? 'ring-2 ring-indigo-500' : '' }} bg-slate-800">
-                                        <div class="flex justify-between items-start mb-4">
-                                            <h4 class="text-xl font-bold">{{ $tier->name }}</h4>
-                                            @if($loop->first)
-                                                <span class="bg-slate-700 text-gray-100 text-xs px-2 py-1 rounded-full">Popular</span>
-                                            @endif
-                                        </div>
+                            <div class="border-t border-slate-700 pt-6 mb-8"></div>
 
-                                        <div class="text-3xl font-bold text-gray-100 mb-4">${{ number_format($tier->monthly_fee, 2) }}
-                                            <span class="text-sm font-normal text-gray-400">/month</span>
-                                        </div>
-
-                                        <ul class="space-y-2 mb-6 text-gray-300">
-                                            <li class="flex items-center">
-                                                <svg class="w-4 h-4 text-green-500 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                                                    <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
-                                                </svg>
-                                                {{ $tier->borrow_limit_per_week }} books per week
-                                            </li>
-                                            <li class="flex items-center">
-                                                <svg class="w-4 h-4 text-green-500 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                                                    <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
-                                                </svg>
-                                                {{ $tier->borrow_duration_days }} days borrow period
-                                            </li>
-                                            <li class="flex items-center">
-                                                <svg class="w-4 h-4 text-green-500 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                                                    <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
-                                                </svg>
-                                                Up to {{ $tier->renewal_limit }} renewals
-                                            </li>
-                                            @if($tier->can_reserve)
-                                                <li class="flex items-center">
-                                                    <svg class="w-4 h-4 text-green-500 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                                                        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
-                                                    </svg>
-                                                    Reservation privileges
-                                                </li>
-                                            @endif
-                                            <li class="flex items-center">
-                                                <svg class="w-4 h-4 text-green-500 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                                                    <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
-                                                </svg>
-                                                ${{ number_format($tier->late_fee_per_day, 2) }}/day late fee
-                                            </li>
-                                        </ul>
-
-                                        <form method="POST" action="{{ route('student.subscription.purchase') }}" x-data="{confirming:false}">
-                                            @csrf
-                                            <input type="hidden" name="tier_id" value="{{ $tier->id }}">
-                                            <button type="button" @click.prevent="confirming = true" class="w-full px-4 py-2 bg-gray-700 text-white rounded-md">Subscribe to {{ $tier->name }}</button>
-
-                                            <div x-show="confirming" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
-                                                <div class="bg-white rounded-lg p-6 max-w-md w-full">
-                                                    <h4 class="text-lg font-semibold mb-4">Confirm Purchase</h4>
-                                                    <p class="mb-4">Are you sure you want to purchase the {{ $tier->name }} subscription for ${{ number_format($tier->monthly_fee,2) }} / month? This will be submitted for admin approval.</p>
-                                                    <div class="flex justify-end space-x-2">
-                                                        <button type="button" @click.prevent="confirming = false" class="px-4 py-2 rounded-md border">Cancel</button>
-                                                        <button type="submit" class="px-4 py-2 bg-indigo-600 text-white rounded-md">Confirm Purchase</button>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </form>
-                                    </div>
-                                @endforeach
-                            </div>
-                        </div>
-                    @endif
-
-                    @if (session('success'))
-                        <div class="bg-green-100 dark:bg-green-900 border border-green-400 dark:border-green-600 text-green-700 dark:text-green-200 px-4 py-3 rounded mb-4">
-                            {{ session('success') }}
-                        </div>
-                    @endif
-
-                    @if ($errors->any())
-                        <div class="bg-red-100 dark:bg-red-900 border border-red-400 dark:border-red-600 text-red-700 dark:text-red-200 px-4 py-3 rounded mb-4">
-                            <ul>
-                                @foreach ($errors->all() as $error)
-                                    <li>{{ $error }}</li>
-                                @endforeach
+                            <ul class="space-y-4 mb-8 text-slate-300 group-hover:text-slate-200 transition-colors">
+                                <li class="flex items-center">
+                                    <svg class="w-6 h-6 text-emerald-400 flex-shrink-0 mr-4" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+                                    </svg>
+                                    <span>{{ $tier->borrow_limit_per_week }} books / week</span>
+                                </li>
+                                <li class="flex items-center">
+                                    <svg class="w-6 h-6 text-emerald-400 flex-shrink-0 mr-4" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+                                    </svg>
+                                    <span>{{ $tier->borrow_duration_days }} days borrow</span>
+                                </li>
+                                <li class="flex items-center">
+                                    <svg class="w-6 h-6 text-emerald-400 flex-shrink-0 mr-4" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+                                    </svg>
+                                    <span>{{ $tier->renewal_limit }} renewals</span>
+                                </li>
+                                <li class="flex items-center">
+                                    <svg class="w-6 h-6 text-amber-400 flex-shrink-0 mr-4" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+                                    </svg>
+                                    <span>${{ number_format($tier->late_fee_per_day, 2) }}/day late fee</span>
+                                </li>
                             </ul>
                         </div>
-                    @endif
-                </div>
+
+                        {{-- CTA --}}
+                        @if($currentTierId == $tier->id && $currentSubscription)
+                            <button disabled class="w-full px-6 py-4 bg-gradient-to-r from-emerald-600 to-emerald-700 text-white font-bold rounded-xl shadow-xl cursor-not-allowed opacity-75 text-lg">
+                                Current Plan
+                                @if($daysRemaining !== null)
+                                    <div class="text-sm mt-1 font-normal opacity-90">
+                                        {{ $renewalMessage }}
+                                    </div>
+                                @endif
+                            </button>
+                            <form method="POST" action="{{ route('student.subscription.cancel') }}" class="mt-4" onsubmit="return confirm('Cancel? Access until {{ $currentSubscription->ends_at->format('M j, Y') }}.')" style="opacity: 0.7;">
+                                @csrf
+                                @method('DELETE')
+                                <button type="submit" class="w-full px-6 py-3 bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white font-semibold rounded-xl transition-all shadow-lg text-sm">
+                                    Cancel Subscription
+                                </button>
+                            </form>
+                        @elseif(isset($pendingSubscription) && $pendingSubscription->membership_tier_id == $tier->id)
+                            <button disabled class="w-full px-6 py-4 bg-gradient-to-r from-amber-600 to-amber-700 text-white font-bold rounded-xl shadow-xl cursor-not-allowed opacity-75 text-lg">
+                                Pending Approval
+                            </button>
+                        @else
+                            <form method="POST" action="{{ route('student.subscription.purchase') }}" x-data="{confirming:false}" class="space-y-3">
+                                @csrf
+                                <input type="hidden" name="tier_id" value="{{ $tier->id }}">
+                                <button type="button" @click.prevent="confirming = true" class="w-full group-hover:bg-gradient-to-r group-hover:from-cyan-500 group-hover:to-blue-600 px-8 py-4 bg-gradient-to-r from-slate-700 to-slate-800 text-white font-black rounded-2xl shadow-xl hover:shadow-2xl hover:shadow-cyan-500/25 transform hover:scale-[1.05] transition-all duration-300 text-lg">
+                                    {{ $currentTierId ? 'Upgrade' : 'Subscribe' }} to {{ $tier->name }}
+                                </button>
+
+                                <div x-show="confirming" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50 backdrop-blur-sm">
+                                    <div class="bg-slate-800/95 backdrop-blur-xl rounded-2xl p-8 max-w-md w-full border border-slate-700 shadow-2xl">
+                                        <h4 class="text-2xl font-bold text-white mb-6">Confirm {{ $currentTierId ? 'Upgrade' : 'Purchase' }}</h4>
+                                        <p class="mb-8 text-slate-300 text-lg leading-relaxed">Ready for {{ $tier->name }}? ${{ number_format($tier->monthly_fee,2) }}/month (admin approval required).</p>
+                                        <div class="flex justify-end space-x-4">
+                                            <button type="button" @click.prevent="confirming = false" class="px-8 py-3 bg-slate-700 hover:bg-slate-600 text-slate-200 font-semibold rounded-xl transition-all">Cancel</button>
+                                            <button type="submit" class="px-8 py-3 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white font-black rounded-xl shadow-xl hover:shadow-2xl hover:scale-[1.05] transition-all">Confirm Purchase</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </form>
+                        @endif
+                    </div>
+                @endforeach
             </div>
         </div>
     </div>
 </x-app-layout>
+

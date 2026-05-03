@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Student;
 
 use App\Http\Controllers\Controller;
 use App\Models\BorrowRequest;
+use App\Models\Reservation;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
 
@@ -30,8 +31,8 @@ class DashboardController extends Controller
             ->with('book')
             ->get();
 
-        // Get reservations
-        $reservations = $user->reservations()->with('book')->get();
+        // Get active reservations only (fixes count showing 0)
+        $reservations = $user->reservations()->active()->with('book')->latest()->take(5)->get();
 
         // Get total borrowed count
         $totalBorrowed = BorrowRequest::where('user_id', $user->id)->count();
@@ -62,3 +63,4 @@ class DashboardController extends Controller
         ));
     }
 }
+

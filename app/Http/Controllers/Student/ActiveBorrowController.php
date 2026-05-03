@@ -7,6 +7,7 @@ use App\Models\BorrowRequest;
 use App\Models\AuditLog;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Carbon\Carbon;
 
 class ActiveBorrowController extends Controller
 {
@@ -73,11 +74,49 @@ class ActiveBorrowController extends Controller
         AuditLog::create([
             'user_id' => $user->id,
             'action' => 'renew',
-            'entity_type' => 'borrow_request',
-            'entity_id' => $borrowRequest->id,
-            'details' => "Renewed borrow request for book '{$borrowRequest->book->title}'. New due date: {$newDueDate->format('Y-m-d')}. Renewals used: {$borrowRequest->renewals_used}",
+            'model_type' => 'App\\Models\\BorrowRequest',
+            'model_id' => $borrowRequest->id,
+            'changes' => json_encode([
+                'old_due_date' => $borrowRequest->getOriginal('due_at'),
+                'new_due_date' => $newDueDate->format('Y-m-d'),
+                'renewals_used' => $borrowRequest->renewals_used,
+                'book_title' => $borrowRequest->book->title
+            ]),
         ]);
 
         return redirect()->back()->with('success', "Book renewal successful. New due date: {$newDueDate->format('M j, Y')}");
     }
+
+    public function returnRequest($id)
+    {
+        $user = Auth::user();
+
+        $borrowRequest = BorrowRequest::where('user_id', $user->id)
+            ->where('id', $id)
+            ->whereIn('status', ['active', 'overdue'])
+            ->firstOrFail();
+
+$borrowRequest->update([
+            'status' => 'return_requested',
+        ]);
+
+        // Notify staff
+        $staffUsers = \App\Models\User::where('role', 'staff')->get();
+        Notification::send($staffUsers, new \App\Notifications\StaffNewReturnRequestNotification($borrowRequest));
+
+        // Log the return request
+        AuditLog::create([
+            'user_id' => $user->id,
+            'action' => 'return_request',
+            'model_type' => 'App\\Models\\BorrowRequest',
+            'model_id' => $borrowRequest->id,
+            'changes' => json_encode([
+                'book_title' => $borrowRequest->book->title,
+                'due_date' => $borrowRequest->due_at->format('Y-m-d'),
+            ])
+        ]);
+
+        return redirect()->back()->with('success', 'Return request sent to staff. They will process it shortly.');
+    }
 }
+

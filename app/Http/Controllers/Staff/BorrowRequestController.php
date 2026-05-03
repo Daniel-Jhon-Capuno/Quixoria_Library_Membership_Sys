@@ -122,10 +122,8 @@ class BorrowRequestController extends Controller
                 return back()->with('error', $message);
             }
 
-            // (monthly limits removed — enforcement is weekly-only)
-
             // 4. Check for overdue books
-                $overdueCount = BorrowRequest::where('user_id', $student->id)
+            $overdueCount = BorrowRequest::where('user_id', $student->id)
                 ->whereIn('status', ['active', 'overdue'])
                 ->where('due_at', '<', now())
                 ->count();
@@ -154,7 +152,7 @@ class BorrowRequestController extends Controller
             Log::info('Borrow request confirmed', ['borrow_request_id' => $borrowRequest->id, 'handled_by' => Auth::id()]);
 
             // Broadcast updated usage to the student so their UI updates in real-time
-                try {
+            try {
                 $weekStart = now()->startOfWeek();
                 $weekEnd = now()->endOfWeek();
                 $weeklyBorrows = BorrowRequest::where('user_id', $student->id)
@@ -184,14 +182,12 @@ class BorrowRequestController extends Controller
         }
     }
 
-    // Show confirmation page for approving a borrow request
     public function showConfirm($id)
     {
         $borrowRequest = BorrowRequest::with(['student', 'book', 'student.subscription.membershipTier'])->findOrFail($id);
         return view('staff.borrow-requests.confirm', compact('borrowRequest'));
     }
 
-    // Show rejection page for staff to input reason
     public function showReject($id)
     {
         $borrowRequest = BorrowRequest::with(['student', 'book'])->findOrFail($id);
@@ -206,8 +202,8 @@ class BorrowRequestController extends Controller
 
         $borrowRequest = BorrowRequest::with('student')->findOrFail($id);
 
-        if ($borrowRequest->status !== 'pending') {
-            $message = 'Only pending requests can be rejected.';
+        if (!in_array($borrowRequest->status, ['pending', 'return_requested'])) {
+            $message = 'Cannot reject this request type.';
             if ($request->expectsJson()) {
                 return response()->json(['success' => false, 'message' => $message], 422);
             }
@@ -215,7 +211,7 @@ class BorrowRequestController extends Controller
         }
 
         $borrowRequest->update([
-            'status' => 'rejected',
+            'status' => $borrowRequest->status === 'pending' ? 'rejected' : 'active',
             'handled_by' => Auth::id(),
             'rejection_reason' => $request->rejection_reason,
         ]);
@@ -224,17 +220,34 @@ class BorrowRequestController extends Controller
         $borrowRequest->student->notifyNow(new BorrowRequestRejectedNotification($borrowRequest));
 
         if ($request->expectsJson()) {
-            return response()->json(['success' => true, 'message' => 'Borrow request rejected successfully.']);
+            return response()->json(['success' => true, 'message' => 'Request rejected successfully.']);
         }
-        return back()->with('success', 'Borrow request rejected.');
+        return back()->with('success', 'Request rejected.');
+    }
+
+    public function rejectReturn($id)
+    {
+        $borrowRequest = BorrowRequest::with('student')->findOrFail($id);
+
+        if ($borrowRequest->status !== 'return_requested') {
+            return back()->with('error', 'Only return requests can be rejected.');
+        }
+
+        $borrowRequest->update([
+            'status' => 'active',
+            'handled_by' => Auth::id(),
+            'rejection_reason' => 'Return request rejected by staff',
+        ]);
+
+        return redirect()->route('staff.borrow-requests.index')->with('success', 'Return request rejected.');
     }
 
     public function checkIn($id)
     {
         $borrowRequest = BorrowRequest::with(['student', 'book', 'student.subscription.membershipTier'])->findOrFail($id);
 
-        if ($borrowRequest->status !== 'active' && $borrowRequest->status !== 'overdue') {
-            return back()->with('error', 'Only active or overdue borrows can be checked in.');
+        if (!in_array($borrowRequest->status, ['active', 'overdue', 'return_requested'])) {
+            return back()->with('error', 'Only active, overdue, or return requested borrows can be checked in.');
         }
 
         DB::beginTransaction();
@@ -288,17 +301,14 @@ class BorrowRequestController extends Controller
 
         if ($nextReservation) {
             // Notify the student that the book is now available
-            // You could send a notification here
             // $nextReservation->student->notify(new BookAvailableNotification($nextReservation));
         }
     }
 
-    // Allow staff to download or re-download a receipt PDF for a borrow request
     public function downloadReceipt($id)
     {
         $borrowRequest = BorrowRequest::with(['student', 'book', 'handler'])->findOrFail($id);
 
-        // Only staff should reach this route (route group enforces role), but double-check
         if (auth()->user()->role !== 'staff' && auth()->user()->role !== 'admin') {
             abort(403);
         }
@@ -314,7 +324,7 @@ class BorrowRequestController extends Controller
             Log::warning('Failed to generate receipt PDF for staff download', ['exception' => $e->getMessage(), 'borrow_request_id' => $borrowRequest->id]);
         }
 
-        // Fallback: render HTML receipt in browser
         return view('student.borrow-requests.receipt', compact('borrowRequest'));
     }
 }
+

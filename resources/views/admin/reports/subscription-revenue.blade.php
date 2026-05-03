@@ -45,18 +45,18 @@
                             <thead class="bg-slate-800">
                                 <tr>
                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Month</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Total Revenue</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Subscription Count</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Average Revenue</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Net Revenue</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Subscriptions</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Avg Revenue</th>
                                 </tr>
                             </thead>
                             <tbody class="bg-transparent divide-y divide-slate-700">
-                                @forelse($revenues as $revenue)
+                                @forelse($revenue as $r)
                                 <tr>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-100">{{ $revenue->month }}</td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-300">${{ number_format($revenue->total_revenue, 2) }}</td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-300">{{ $revenue->subscription_count }}</td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-300">${{ number_format($revenue->avg_revenue, 2) }}</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-100">{{ $r->month }}</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-300">${{ number_format($r->net_revenue, 2) }}</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-300">{{ $r->payments }}</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-300">${{ number_format($r->net_revenue / max($r->payments, 1), 2) }}</td>
                                 </tr>
                                 @empty
                                 <tr>
@@ -102,3 +102,4 @@
     })();
 </script>
 @endpush
+

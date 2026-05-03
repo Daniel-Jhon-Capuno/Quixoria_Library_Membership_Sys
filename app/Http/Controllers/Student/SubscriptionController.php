@@ -15,7 +15,7 @@ use Carbon\Carbon;
 
 class SubscriptionController extends Controller
 {
-    public function index()
+public function index()
     {
         $user = Auth::user();
         $currentSubscription = $user->subscription;
@@ -24,26 +24,23 @@ class SubscriptionController extends Controller
             ->orderBy('created_at', 'desc')
             ->first();
 
-        if ($currentSubscription) {
-            $tier = $currentSubscription->membershipTier;
-            $daysRemaining = Carbon::now()->diffInDays($currentSubscription->ends_at, false);
-            $renewalMessage = $daysRemaining > 0
-                ? "Your subscription renews in {$daysRemaining} days"
-                : "Your subscription expired " . abs($daysRemaining) . " days ago";
-
-            return view('student.subscription.index', compact(
-                'currentSubscription',
-                'tier',
-                'daysRemaining',
-                'renewalMessage'
-            ));
-        }
-
-        // No active subscription - show available tiers and pending subscription if any
         $tiers = MembershipTier::orderBy('priority_level')->get();
+        $currentTierId = $currentSubscription?->membership_tier_id ?? null;
+        $daysRemaining = $currentSubscription ? round(Carbon::now()->diffInDays($currentSubscription->ends_at, false)) : null;
+        $renewalMessage = $daysRemaining !== null && $daysRemaining > 0
+            ? "Renews in {$daysRemaining} days"
+            : ($daysRemaining !== null ? "Expired " . abs($daysRemaining) . " days ago" : '');
 
-        return view('student.subscription.index', compact('tiers', 'pendingSubscription'));
+        return view('student.subscription.index', compact(
+            'tiers',
+            'currentTierId',
+            'currentSubscription',
+            'pendingSubscription',
+            'daysRemaining',
+            'renewalMessage'
+        ));
     }
+
 
     public function purchase(Request $request)
     {
@@ -85,6 +82,10 @@ class SubscriptionController extends Controller
         // Notify admins to review/confirm the pending subscription
         $admins = \App\Models\User::where('role', 'admin')->get();
         Notification::send($admins, new AdminNewSubscriptionNotification($subscription));
+        
+        // Also notify all staff about new subscription activity
+        $staffUsers = \App\Models\User::where('role', 'staff')->get();
+        Notification::send($staffUsers, new \App\Notifications\AdminNewSubscriptionNotification($subscription));
 
         return redirect()->route('student.subscription.index')
             ->with('success', 'Subscription request submitted for admin approval!');

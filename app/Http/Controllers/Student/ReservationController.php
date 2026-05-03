@@ -37,4 +37,21 @@ class ReservationController extends Controller
 
         return back()->with('success', 'Your reservation has been created. You will be notified when the book becomes available.');
     }
+
+    /**
+     * Cancel a reservation (student can only cancel 'waiting' reservations)
+     */
+    public function destroy($id)
+    {
+        $user = Auth::user();
+
+        $reservation = Reservation::where('user_id', $user->id)
+            ->where('id', $id)
+            ->where('status', 'waiting')
+            ->firstOrFail();
+
+        $reservation->delete();
+
+        return back()->with('success', 'Reservation cancelled successfully.');
+    }
 }

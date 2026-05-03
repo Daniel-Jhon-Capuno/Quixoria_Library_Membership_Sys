@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="csrf-token" content="{{ csrf_token() }}">
-  <title>{{ config('app.name', 'LibraryHub') }} — Welcome</title>
+<title>{{ config('app.name', 'Quixoria') }} — Welcome</title>
   <link rel="preconnect" href="https://fonts.bunny.net">
   <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
   @vite(['resources/css/app.css', 'resources/js/app.js'])
@@ -17,7 +17,7 @@
           <span class="font-bold">LH</span>
         </div>
         <div>
-          <h1 class="text-xl font-semibold">{{ config('app.name', 'LibraryHub') }}</h1>
+          <h1 class="text-xl font-semibold">{{ config('app.name', 'Quixoria') }}</h1>
           <p class="text-sm text-white/80">Library membership and borrowing, reimagined</p>
         </div>
       </div>
@@ -94,7 +94,7 @@
   </section>
 
   <footer class="py-8 px-6">
-    <div class="max-w-6xl mx-auto text-sm text-white/70">© {{ date('Y') }} {{ config('app.name', 'LibraryHub') }}. All rights reserved.</div>
+    <div class="max-w-6xl mx-auto text-sm text-white/70">© {{ date('Y') }} {{ config('app.name', 'Quixoria') }}. All rights reserved.</div>
   </footer>
 </body>
 </html>

@@ -5,14 +5,7 @@
                 <h1 class="text-3xl font-bold text-gray-100">Dashboard</h1>
                 <p class="text-sm mt-1 text-gray-400">Welcome back! Here's what's happening in your library.</p>
             </div>
-            <div class="flex items-center gap-3">
-                <button class="px-4 py-2 rounded-lg text-gray-100 font-medium transition bg-gray-700 hover:bg-gray-600">
-                    Documentation
-                </button>
-                <button class="px-4 py-2 rounded-lg text-gray-100 font-medium transition bg-gray-700 hover:bg-gray-600">
-                    Download Report
-                </button>
-            </div>
+            <div></div>
         </div>
     </x-slot>
 

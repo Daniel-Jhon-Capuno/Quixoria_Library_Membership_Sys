@@ -14,7 +14,14 @@ export default {
     theme: {
         extend: {
             fontFamily: {
-                sans: ['Figtree', ...defaultTheme.fontFamily.sans],
+                sans: ['Inter', 'Figtree', ...defaultTheme.fontFamily.sans],
+            },
+            fontWeight: {
+                normal: '400',
+                medium: '500', 
+                semibold: '600',
+                bold: '700',
+                black: '900',
             },
             colors: {
                 // Brand colors

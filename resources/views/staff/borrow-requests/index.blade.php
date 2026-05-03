@@ -16,6 +16,7 @@
                                 <option value="pending" {{ request('status') == 'pending' ? 'selected' : '' }}>Pending</option>
                                 <option value="active" {{ request('status') == 'active' ? 'selected' : '' }}>Active</option>
                                 <option value="returned" {{ request('status') == 'returned' ? 'selected' : '' }}>Returned</option>
+                                <option value="return_requested" {{ request('status') == 'return_requested' ? 'selected' : '' }}>Return Requested</option>
                                 <option value="overdue" {{ request('status') == 'overdue' ? 'selected' : '' }}>Overdue</option>
                                 <option value="rejected" {{ request('status') == 'rejected' ? 'selected' : '' }}>Rejected</option>
                             </select>
@@ -64,11 +65,12 @@
                                         <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full
                                             @if($request->status == 'pending') bg-yellow-800 text-yellow-200
                                             @elseif($request->status == 'active') bg-green-800 text-green-200
+                                            @elseif($request->status == 'return_requested') bg-orange-800 text-orange-200
                                             @elseif($request->status == 'returned') bg-slate-700 text-gray-100
                                             @elseif($request->status == 'overdue') bg-red-800 text-red-200
                                             @elseif($request->status == 'rejected') bg-red-800 text-red-200
                                             @else bg-slate-700 text-gray-100 @endif">
-                                            {{ ucfirst($request->status) }}
+                                            {{ ucfirst(str_replace('_', ' ', $request->status)) }}
                                         </span>
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-400">
@@ -85,21 +87,33 @@
                                         @endif
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                        @if($request->status === 'pending')
-                                        <div class="flex space-x-2">
-                                            <form method="POST" action="{{ route('staff.borrow-requests.confirm', $request->id) }}" class="inline">
-                                                @csrf
-                                                <button type="submit" data-confirm="Confirm this borrow request?" class="text-green-300 hover:text-green-200">Confirm</button>
-                                            </form>
-                                            <button type="button" class="text-red-300 hover:text-red-200" onclick="openRejectModal({{ $request->id }})">Reject</button>
-                                        </div>
+@if($request->status === 'pending')
+                                            <div class="flex flex-col space-y-2">
+                                                <div class="flex space-x-2">
+                                                    <form method="POST" action="{{ route('staff.borrow-requests.confirm', $request->id) }}" class="inline">
+                                                        @csrf
+                                                        <button type="submit" data-confirm="Confirm borrow request?" class="px-3 py-1 bg-green-600 hover:bg-green-700 text-white text-xs font-semibold rounded transition-colors">Confirm</button>
+                                                    </form>
+                                                    <button type="button" onclick="openRejectModal({{ $request->id }})" class="px-3 py-1 bg-red-600 hover:bg-red-700 text-white text-xs font-semibold rounded transition-colors">Reject</button>
+                                                </div>
+                                            </div>
+                                        @elseif($request->status === 'return_requested')
+                                            <div class="flex flex-col space-y-2">
+                                                <div class="flex space-x-2">
+                                                    <form method="POST" action="{{ route('staff.borrow-requests.check-in', $request->id) }}" class="inline">
+                                                        @csrf
+                                                        <button type="submit" data-admin-confirm="Confirm return? Mark book returned & update inventory." class="px-3 py-1 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded transition-colors">✅ Confirm Return</button>
+                                                    </form>
+                                                    <button type="button" onclick="openRejectReturnModal({{ $request->id }})" class="px-3 py-1 bg-red-600 hover:bg-red-700 text-white text-xs font-semibold rounded transition-colors">Reject Return Request</button>
+                                                </div>
+                                            </div>
                                         @elseif(in_array($request->status, ['active', 'overdue']))
-                                        <form method="POST" action="{{ route('staff.borrow-requests.check-in', $request->id) }}" class="inline">
-                                            @csrf
-                                            <button type="submit" data-confirm="Check in this book?" class="text-blue-300 hover:text-blue-200">Check In</button>
-                                        </form>
+                                            <form method="POST" action="{{ route('staff.borrow-requests.check-in', $request->id) }}" class="inline">
+                                                @csrf
+                                                <button type="submit" data-admin-confirm="Check-in book? This marks it returned." class="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded transition-colors">Check In</button>
+                                            </form>
                                         @else
-                                        <span class="text-gray-400">-</span>
+                                            <span class="text-gray-400 text-xs">No action</span>
                                         @endif
                                     </td>
                                 </tr>
@@ -155,5 +169,8 @@
             document.getElementById('rejectModal').classList.add('hidden');
             document.getElementById('rejection_reason').value = '';
         }
+        
+
+@include('staff.borrow-requests.partials.reject-return-modal')
     </script>
 </x-app-layout>

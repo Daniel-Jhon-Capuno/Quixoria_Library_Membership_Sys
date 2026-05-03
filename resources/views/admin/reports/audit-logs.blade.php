@@ -54,7 +54,7 @@
                                 </tr>
                             </thead>
                             <tbody class="bg-transparent divide-y divide-slate-700">
-                                @forelse($logs as $log)
+@forelse($auditLogs as $log)
                                 <tr>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-100">{{ $log->created_at->format('Y-m-d H:i:s') }}</td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-300">{{ $log->user->name ?? 'System' }}</td>
@@ -83,9 +83,9 @@
                     </div>
 
                     <!-- Pagination -->
-                    @if($logs->hasPages())
+@if($auditLogs->hasPages())
                     <div class="mt-4">
-                        {{ $logs->links() }}
+{{ $auditLogs->links() }}
                     </div>
                     @endif
                 </div>
