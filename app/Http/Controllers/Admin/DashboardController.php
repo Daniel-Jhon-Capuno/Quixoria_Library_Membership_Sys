@@ -55,10 +55,11 @@ class DashboardController extends Controller
             ->sum('amount');
 
         // Latest 5 borrow requests
-        $latestBorrowRequests = BorrowRequest::with(['user', 'book'])
+        $latestBorrowRequests = BorrowRequest::with(['student', 'book'])
             ->latest()
             ->take(5)
             ->get();
+
 
         // Latest 5 transactions
         $latestTransactions = Transaction::with(['user', 'subscription.membershipTier'])

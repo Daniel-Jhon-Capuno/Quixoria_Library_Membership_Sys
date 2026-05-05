@@ -18,22 +18,31 @@ class DashboardController extends Controller
 
         $overdueBorrows = BorrowRequest::where("status", "active")
             ->where("due_at", "<", now())
-            ->with(["user", "book"])
+            ->with(["student", "book"])
             ->latest("due_at")
             ->get();
 
+
         $pendingRequests = BorrowRequest::where("status", "pending")
-            ->with(["user", "book", "user.subscription.membershipTier"])
+            ->with(["student", "book", "student.subscription.membershipTier"])
             ->latest("created_at")
             ->get();
 
+
         $dueTodayBorrows = BorrowRequest::where("status", "active")
             ->whereDate("due_at", today())
-            ->with(["user", "book"])
+            ->with(["student", "book"])
             ->get();
+
 
         $lowStockBooks = Book::whereRaw("available_copies < 3")->with("category")->get();
         $totalAvailableBooks = Book::sum("available_copies");
+        $returnRequestsCount = BorrowRequest::where('status', 'return_requested')->count();
+        $returnRequests = BorrowRequest::where('status', 'return_requested')
+            ->with(['student', 'book'])
+            ->latest('created_at')
+            ->take(10)
+            ->get();
 
         return view("staff.dashboard.index", compact(
             "pendingCount",
@@ -44,7 +53,9 @@ class DashboardController extends Controller
             "pendingRequests",
             "dueTodayBorrows",
             "lowStockBooks",
-            "totalAvailableBooks"
+            "totalAvailableBooks",
+            "returnRequestsCount",
+            "returnRequests"
         ));
     }
 }

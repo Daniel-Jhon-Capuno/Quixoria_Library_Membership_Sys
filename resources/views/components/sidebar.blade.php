@@ -1,23 +1,21 @@
 @props(['user' => null])
 
-<div x-data="{ profileOpen: false }"
-     x-bind:class="sidebarCollapsed ? 'fixed left-0 top-0 h-screen w-20 shadow-xl z-50 sidebar collapsed transition-all duration-300' : 'fixed left-0 top-0 h-screen w-56 shadow-xl z-50 sidebar transition-all duration-300'" 
+<div x-data="{ profileOpen: false, sidebarCollapsed: false, toggleSidebar() { this.sidebarCollapsed = !this.sidebarCollapsed; localStorage.setItem('sidebarCollapsed', this.sidebarCollapsed); try { fetch('{{ route('user.preferences.sidebar-collapsed') }}', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' }, body: JSON.stringify({ sidebar_collapsed: this.sidebarCollapsed }) }); } catch(e){} }, }"
+    x-init="sidebarCollapsed = (localStorage.getItem('sidebarCollapsed') !== null ? (localStorage.getItem('sidebarCollapsed') === 'true') : {{ json_encode(auth()->user()->sidebar_collapsed ?? false) }})"
+    x-bind:class="sidebarCollapsed ? 'fixed left-0 top-0 h-screen w-20 shadow-xl z-50 sidebar collapsed transition-all duration-300' : 'fixed left-0 top-0 h-screen w-56 shadow-xl z-50 sidebar transition-all duration-300'" 
      style="background: linear-gradient(to bottom, rgb(20, 45, 70), rgb(10, 20, 35)); overflow-y: auto;" 
      x-cloak
      @mouseenter="if(window.innerWidth >= 1024) sidebarCollapsed = false"
      @mouseleave="if(window.innerWidth >= 1024) sidebarCollapsed = true">
     
-    <div class="px-4 py-6 border-b flex items-center cursor-pointer group" 
-         style="border-color: rgba(40, 100, 150, 0.3);" 
-         @click="sidebarCollapsed = !sidebarCollapsed; localStorage.setItem('sidebarCollapsed', sidebarCollapsed); window.dispatchEvent(new CustomEvent('sidebar-toggled', { detail: sidebarCollapsed }))">
+        <div class="px-4 py-6 border-b flex items-center cursor-pointer group" 
+            style="border-color: rgba(40, 100, 150, 0.3);" 
+            @click="toggleSidebar(); window.dispatchEvent(new CustomEvent('sidebar-toggled', { detail: sidebarCollapsed }))">
         
         <div class="flex items-center gap-3 overflow-hidden flex-shrink-0">
             <!-- Logo - Always left-aligned -->
-            <div class="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0" style="background: linear-gradient(to bottom right, rgba(100, 200, 255, 0.3), rgba(0, 255, 200, 0.3));">
-                <svg class="w-5 h-5 mx-auto text-cyan-400" fill="currentColor" viewBox="0 0 20 20">
-                    <path d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4z"></path>
-                    <path fill-rule="evenodd" d="M3 10a1 1 0 011-1h12a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6z" clip-rule="evenodd"></path>
-                </svg>
+<div class="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 bg-gradient-to-br from-purple-mesh/20 to-teal-glow/20 border border-purple-mesh/30">
+                <img src="/images/logo.png" alt="Quixoria" class="w-6 h-6 object-contain rounded">
             </div>
             
             <!-- Text - Right side, only on expanded -->
@@ -27,6 +25,14 @@
             </div>
         </div>
     </div>
+    <style>
+        /* On small screens, make the expanded sidebar take full width, but keep collapsed small */
+        @media (max-width: 1023px) {
+            .sidebar { left: 0 !important; top: 0 !important; }
+            .sidebar:not(.collapsed) { width: 100% !important; }
+            .sidebar.collapsed { width: 5rem !important; }
+        }
+    </style>
 
     <nav class="px-2 py-6 space-y-2 flex-1">
         @php $role = auth()->user()->role; @endphp
@@ -36,12 +42,32 @@
             <x-sidebar-link href="{{ route('admin.users.index') }}" icon="users" label="User Management" />
             <x-sidebar-link href="{{ route('admin.books.index') }}" icon="book-open" label="Books" />
             <x-sidebar-link href="{{ route('admin.tiers.index') }}" icon="star" label="Membership Tiers" />
-            <x-sidebar-link href="{{ route('admin.subscriptions.index') }}" icon="shopping-cart" label="Subscriptions" />
+            @php
+                $pendingSubsCount = \App\Models\Subscription::where('status', 'pending')->count();
+                $isSubsActive = request()->routeIs('admin.subscriptions.*');
+            @endphp
+            <a href="{{ url('admin/subscriptions') }}" class="{{ $isSubsActive ? 'bg-slate-700/80 text-white border-l-2 border-cyan-400' : 'text-slate-300 hover:text-white' }} flex items-center gap-3 p-3 rounded-xl transition-all duration-200 hover:bg-slate-800/50 group relative overflow-hidden">
+                <svg class="w-5 h-5 flex-shrink-0 opacity-75 group-hover:opacity-100 transition-opacity" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h18v13a2 2 0 01-2 2H5a2 2 0 01-2-2V3z"></path>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10"></path>
+                </svg>
+                <span x-show="!sidebarCollapsed" x-transition.opacity class="font-medium flex-1 whitespace-nowrap transition-colors">Subscriptions</span>
+                {{-- compact pending badge (mini) to indicate there are pending items --}}
+                @if($pendingSubsCount)
+                    <span id="sidebarPendingMini" class="absolute top-3 right-3 inline-flex items-center justify-center w-4 h-4 rounded-full bg-yellow-600 text-white text-[10px] font-semibold">{{ $pendingSubsCount > 9 ? '9+' : $pendingSubsCount }}</span>
+                @else
+                    <span id="sidebarPendingMini" class="hidden"></span>
+                @endif
+            </a>
+            {{-- Payments management link --}}
+            <x-sidebar-link href="{{ route('admin.payments.index') }}" icon="credit-card" label="Payment Management" />
+            {{-- Pending submenu removed; use Subscriptions page to view pending items. --}}
             <x-sidebar-link href="{{ route('admin.reports.index') }}" icon="document-chart-bar" label="Reports" />
-        @elseif($role === 'staff')
-            <x-sidebar-link href="{{ route('staff.dashboard.index') }}" icon="chart-bar" label="Dashboard" />
-            <x-sidebar-link href="{{ route('staff.borrow-requests.index') }}" icon="inbox" label="Requests" />
-            <x-sidebar-link href="{{ route('staff.deadline-dashboard.index') }}" icon="calendar" label="Deadline Dashboard" />
+@elseif($role === 'staff')
+    <x-sidebar-link href="{{ route('staff.dashboard.index') }}" icon="chart-bar" label="Dashboard" activePattern="staff.dashboard.*" />
+    <x-sidebar-link href="{{ route('staff.borrow-requests.index') }}" icon="inbox" label="Requests" activePattern="staff.borrow-requests.*" />
+    <x-sidebar-link href="{{ route('staff.deadline-dashboard.index') }}" icon="calendar" label="Deadline Dashboard" activePattern="staff.deadline-dashboard.*" />
+    <x-sidebar-link href="{{ route('staff.appeals.index') }}" icon="document-chart-bar" label="Return Appeals" activePattern="staff.appeals.*" />
         @else
             <x-sidebar-link href="{{ route('student.dashboard.index') }}" icon="chart-bar" label="Dashboard" />
             <x-sidebar-link href="{{ route('student.book-catalog.index') }}" icon="book-open" label="Browse Books" />
@@ -58,8 +84,8 @@
                 :class="sidebarCollapsed ? 'justify-center p-2' : ''"
                 style="background: rgba(100, 200, 255, 0.06); border: 1px solid rgba(100, 200, 255, 0.02);">
             
-            <div :class="sidebarCollapsed ? 'mx-auto' : ''" class="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0" style="background: linear-gradient(to bottom right, rgba(100, 200, 255, 0.3), rgba(0, 255, 200, 0.3));">
-                <span class="font-bold text-sm" style="color: rgb(var(--accent-primary));">{{ substr(auth()->user()->name, 0, 1) }}</span>
+            <div :class="sidebarCollapsed ? 'mx-auto' : ''" class="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 bg-gradient-to-br from-slate-700/80 to-slate-800/60 border border-slate-600/50">
+                <span class="w-6 h-6 font-bold text-sm flex items-center justify-center text-white leading-none tracking-tight uppercase">{{ strtoupper(substr(auth()->user()->name ?? 'User', 0, 2)) }}</span>
             </div>
             
             <div x-show="!sidebarCollapsed" x-transition.opacity class="flex-1 min-w-0">
@@ -98,4 +124,3 @@
         </div>
     </div>
 </div>
-

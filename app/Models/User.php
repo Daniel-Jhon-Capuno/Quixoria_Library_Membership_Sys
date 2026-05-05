@@ -2,7 +2,6 @@
 
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
 use App\Traits\AssignBasicSubscription;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
@@ -11,30 +10,25 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
-#[Fillable(['name', 'email', 'password', 'role', 'is_active'])]
+#[Fillable(['name', 'email', 'password', 'role', 'is_active', 'is_restricted', 'restriction_reason', 'restricted_at', 'sidebar_collapsed'])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable
 {
-    /** @use HasFactory<UserFactory> */
     use HasFactory, Notifiable, AssignBasicSubscription;
 
-    /**
-     * Get the attributes that should be cast.
-     *
-     * @return array<string, string>
-     */
     protected function casts(): array
     {
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'is_restricted' => 'boolean',
+            'restricted_at' => 'datetime',
+            'sidebar_collapsed' => 'boolean',
         ];
     }
 
     public function subscription()
     {
-        // Prefer the most recently created active subscription if multiple exist.
-        // Use latestOfMany to ensure we always resolve the newest active subscription reliably.
         return $this->hasOne(Subscription::class)->where('status', 'active')->latestOfMany('created_at');
     }
 

@@ -6,9 +6,7 @@
                 <!-- Logo -->
                 <div class="shrink-0 flex items-center">
                     <a href="{{ route('dashboard') }}" class="flex items-center gap-3">
-                        <div class="h-10 w-10 rounded-2xl bg-gradient-to-br from-cyan-400 to-violet-500 flex items-center justify-center shadow-lg shadow-cyan-500/20">
-                            <span class="text-sm font-black text-slate-950">L</span>
-                        </div>
+                        <img src="/images/logo.png" alt="Quixoria" class="h-10 w-10 rounded-2xl shadow-lg shadow-cyan-500/20 object-contain bg-gradient-to-br from-cyan-400/20 to-violet-500/20">
                         <span class="text-white font-semibold tracking-wide">LibrarySYS</span>
                     </a>
                 </div>

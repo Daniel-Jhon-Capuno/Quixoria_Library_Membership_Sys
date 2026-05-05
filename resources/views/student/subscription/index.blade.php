@@ -99,24 +99,18 @@
                                 Pending Approval
                             </button>
                         @else
-                            <form method="POST" action="{{ route('student.subscription.purchase') }}" x-data="{confirming:false}" class="space-y-3">
-                                @csrf
-                                <input type="hidden" name="tier_id" value="{{ $tier->id }}">
-                                <button type="button" @click.prevent="confirming = true" class="w-full group-hover:bg-gradient-to-r group-hover:from-cyan-500 group-hover:to-blue-600 px-8 py-4 bg-gradient-to-r from-slate-700 to-slate-800 text-white font-black rounded-2xl shadow-xl hover:shadow-2xl hover:shadow-cyan-500/25 transform hover:scale-[1.05] transition-all duration-300 text-lg">
-                                    {{ $currentTierId ? 'Upgrade' : 'Subscribe' }} to {{ $tier->name }}
-                                </button>
-
-                                <div x-show="confirming" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50 backdrop-blur-sm">
-                                    <div class="bg-slate-800/95 backdrop-blur-xl rounded-2xl p-8 max-w-md w-full border border-slate-700 shadow-2xl">
-                                        <h4 class="text-2xl font-bold text-white mb-6">Confirm {{ $currentTierId ? 'Upgrade' : 'Purchase' }}</h4>
-                                        <p class="mb-8 text-slate-300 text-lg leading-relaxed">Ready for {{ $tier->name }}? ${{ number_format($tier->monthly_fee,2) }}/month (admin approval required).</p>
-                                        <div class="flex justify-end space-x-4">
-                                            <button type="button" @click.prevent="confirming = false" class="px-8 py-3 bg-slate-700 hover:bg-slate-600 text-slate-200 font-semibold rounded-xl transition-all">Cancel</button>
-                                            <button type="submit" class="px-8 py-3 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white font-black rounded-xl shadow-xl hover:shadow-2xl hover:scale-[1.05] transition-all">Confirm Purchase</button>
-                                        </div>
-                                    </div>
-                                </div>
-                            </form>
+                            @php
+                                $paymentRoute = route('student.payment.show', $tier->id);
+                            @endphp
+                            @if($currentTierId)
+                                <a href="{{ $paymentRoute }}" class="w-full group-hover:bg-gradient-to-r group-hover:from-cyan-500 group-hover:to-blue-600 px-8 py-4 bg-gradient-to-r from-slate-700 to-slate-800 text-white font-black rounded-2xl shadow-xl hover:shadow-2xl hover:shadow-cyan-500/25 transform hover:scale-[1.05] transition-all duration-300 text-lg text-center">
+                                    Upgrade to {{ $tier->name }}
+                                </a>
+                            @else
+                                <a href="{{ $paymentRoute }}" class="w-full group-hover:bg-gradient-to-r group-hover:from-cyan-500 group-hover:to-blue-600 px-8 py-4 bg-gradient-to-r from-slate-700 to-slate-800 text-white font-black rounded-2xl shadow-xl hover:shadow-2xl hover:shadow-cyan-500/25 transform hover:scale-[1.05] transition-all duration-300 text-lg text-center">
+                                    Purchase {{ $tier->name }}
+                                </a>
+                            @endif
                         @endif
                     </div>
                 @endforeach

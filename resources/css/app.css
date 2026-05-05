@@ -17,6 +17,73 @@
 }
 
 @layer utilities {
+  .mesh-gradient {
+    background: 
+      radial-gradient(circle at 20% 80%, rgba(124,58,237,0.22), transparent 50%), 
+      radial-gradient(circle at 80% 20%, rgba(14,165,233,0.33), transparent 50%), 
+      linear-gradient(135deg, rgba(12,20,35,0.95) 0%, rgba(20,45,70,0.98) 100%);
+  }
+
+  .hero-gradient {
+    background: linear-gradient(135deg, #64c8ff 0%, #7c3aed 50%, #0ea5e9 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .glass-deep {
+    background: rgba(15,25,40,0.4);
+    backdrop-filter: blur(40px);
+    border: 1px solid transparent;
+    background-clip: padding-box;
+    box-shadow: rgba(124,58,237,0.5) 0 0 0 1px, rgba(14,165,233,0.3) 0 0 30px, 0 25px 50px rgba(0,0,0,0.5);
+  }
+
+  .feature-glow {
+    position: relative;
+    overflow: hidden;
+  }
+  .feature-glow::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 4px;
+    background: linear-gradient(to bottom, #7c3aed, #0ea5e9);
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 0.3s ease;
+    box-shadow: rgba(124,58,237,0.6) 0 0 20px;
+  }
+  .feature-glow:hover::before {
+    transform: scaleX(1);
+  }
+
+  .particles {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    pointer-events: none;
+    z-index: 0;
+  }
+  .particle {
+    position: absolute;
+    width: 4px;
+    height: 4px;
+    background: linear-gradient(45deg, #0ea5e9, #7c3aed);
+    border-radius: 50%;
+    animation: float 20s infinite linear;
+  }
+  @keyframes float {
+    0% { transform: translateY(100vh) rotate(0deg); opacity: 0; }
+    10% { opacity: 1; }
+    90% { opacity: 1; }
+    100% { transform: translateY(-100px) rotate(360deg); opacity: 0; }
+  }
+
   .bg-surface {
     background: rgba(20, 45, 70, 0.94);
     border: 1px solid rgba(40, 100, 150, 0.3);

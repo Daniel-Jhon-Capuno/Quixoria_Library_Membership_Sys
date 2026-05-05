@@ -19,12 +19,16 @@ class BorrowRequest extends Model
         'renewals_used',
         'late_fee_charged',
         'late_fee_waived',
+        'appeal_reason',
+        'appeal_scheduled_at',
+        'appeal_status',
     ];
 
     protected $casts = [
         'borrowed_at' => 'datetime',
         'due_at' => 'datetime',
         'returned_at' => 'datetime',
+        'appeal_scheduled_at' => 'datetime',
         'is_damaged' => 'boolean',
         'late_fee_waived' => 'boolean',
     ];

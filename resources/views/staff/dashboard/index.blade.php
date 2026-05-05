@@ -56,6 +56,11 @@
             value="{{ $dueTodayCount ?? 0 }}"
             subtitle="Return deadline today"
             color="accent" />
+        <x-stat-card 
+            title="Return Requests" 
+            value="{{ $returnRequestsCount ?? 0 }}"
+            subtitle="Awaiting staff review"
+            color="purple" />
     </div>
 
     <!-- Overdue Borrows (High Priority) -->
@@ -99,8 +104,13 @@
         </div>
     @endif
 
+    @include('staff.dashboard.return-requests')
+    
+    @include('staff.borrow-requests.partials.reject-return-modal')
+
     <!-- Pending Requests Table -->
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+
         <!-- Requests Table -->
         <div class="lg:col-span-2">
             <div class="card">

@@ -18,7 +18,9 @@
                                 <option value="returned" {{ request('status') == 'returned' ? 'selected' : '' }}>Returned</option>
                                 <option value="return_requested" {{ request('status') == 'return_requested' ? 'selected' : '' }}>Return Requested</option>
                                 <option value="overdue" {{ request('status') == 'overdue' ? 'selected' : '' }}>Overdue</option>
-                                <option value="rejected" {{ request('status') == 'rejected' ? 'selected' : '' }}>Rejected</option>
+<option value="rejected" {{ request('status') == 'rejected' ? 'selected' : '' }}>Rejected</option>
+                                <option value="return_rejected" {{ request('status') == 'return_rejected' ? 'selected' : '' }}>Return Rejected</option>
+                                <option value="appeal_pending" {{ request('status') == 'appeal_pending' ? 'selected' : '' }}>Appeal Pending</option>
                             </select>
                         </div>
                         <div>
@@ -104,7 +106,7 @@
                                                         @csrf
                                                         <button type="submit" data-admin-confirm="Confirm return? Mark book returned & update inventory." class="px-3 py-1 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded transition-colors">✅ Confirm Return</button>
                                                     </form>
-                                                    <button type="button" onclick="openRejectReturnModal({{ $request->id }})" class="px-3 py-1 bg-red-600 hover:bg-red-700 text-white text-xs font-semibold rounded transition-colors">Reject Return Request</button>
+<button type="button" class="reject-return-btn px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-xs font-semibold rounded-xl transition-all shadow-lg hover:shadow-xl hover:-translate-y-1 font-medium whitespace-nowrap" title="Reject return request" style="min-width: 140px;" data-request-id="{{ $request->id }}" data-admin-confirm="Reject this return request? Student will receive notification with reason.">❌ Reject Return</button>
                                                 </div>
                                             </div>
                                         @elseif(in_array($request->status, ['active', 'overdue']))
@@ -170,7 +172,26 @@
             document.getElementById('rejection_reason').value = '';
         }
         
+        document.addEventListener('DOMContentLoaded', function() {
+          // Admin confirm dialogs for all buttons
+          document.querySelectorAll('[data-admin-confirm]').forEach(btn => {
+            btn.addEventListener('click', function(e) {
+              e.preventDefault();
+              if (!confirm(this.dataset.adminConfirm)) return;
+              this.closest('form').submit();
+            });
+          });
+          
+          // Reject return specific
+          document.querySelectorAll('.reject-return-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+              const requestId = this.dataset.requestId;
+              openRejectReturnModal(requestId);
+            });
+          });
+        });
+    </script>
 
 @include('staff.borrow-requests.partials.reject-return-modal')
-    </script>
+
 </x-app-layout>

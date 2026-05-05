@@ -151,4 +151,17 @@ class UserController extends Controller
 
         return redirect()->route('admin.users.index')->with('success', 'Password reset and emailed to the user.');
     }
+
+    public function unrestrict($id)
+    {
+        $user = \App\Models\User::findOrFail($id);
+        $user->update([
+            'is_restricted' => false,
+            'restriction_reason' => null,
+            'restricted_at' => null,
+        ]);
+
+        return back()->with('success', 'Account unrestricted successfully.');
+    }
 }
+

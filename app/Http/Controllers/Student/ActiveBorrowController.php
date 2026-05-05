@@ -16,9 +16,8 @@ class ActiveBorrowController extends Controller
         $user = Auth::user();
         $query = BorrowRequest::with(['book'])
             ->where('user_id', $user->id)
-            ->whereIn('status', ['active', 'overdue']);
+            ->whereIn('status', ['active', 'overdue', 'return_requested', 'return_rejected', 'appeal_scheduled', 'appeal_no_show', 'appeal_rescheduled']);
 
-        // Sorting options
         $sortBy = $request->get('sort', 'soonest');
 
         switch ($sortBy) {
@@ -51,26 +50,21 @@ class ActiveBorrowController extends Controller
 
         $tier = $user->subscription->membershipTier;
 
-        // Check if renewal is allowed
         if ($borrowRequest->renewals_used >= $tier->renewal_limit) {
             return redirect()->back()->with('error', 'You have reached the maximum number of renewals for this book.');
         }
 
-        // Check if the book is overdue (some libraries don't allow renewal of overdue books)
         if ($borrowRequest->due_at < now()) {
             return redirect()->back()->with('error', 'Overdue books cannot be renewed. Please return the book first.');
         }
 
-        // Calculate new due date
         $newDueDate = $borrowRequest->due_at->addDays($tier->borrow_duration_days);
 
-        // Update the borrow request
         $borrowRequest->update([
             'due_at' => $newDueDate,
             'renewals_used' => $borrowRequest->renewals_used + 1,
         ]);
 
-        // Log the renewal action
         AuditLog::create([
             'user_id' => $user->id,
             'action' => 'renew',
@@ -93,18 +87,16 @@ class ActiveBorrowController extends Controller
 
         $borrowRequest = BorrowRequest::where('user_id', $user->id)
             ->where('id', $id)
-            ->whereIn('status', ['active', 'overdue'])
+            ->whereIn('status', ['active', 'overdue', 'return_rejected'])
             ->firstOrFail();
 
-$borrowRequest->update([
+        $borrowRequest->update([
             'status' => 'return_requested',
         ]);
 
-        // Notify staff
         $staffUsers = \App\Models\User::where('role', 'staff')->get();
-        Notification::send($staffUsers, new \App\Notifications\StaffNewReturnRequestNotification($borrowRequest));
+        \Illuminate\Support\Facades\Notification::send($staffUsers, new \App\Notifications\StaffNewReturnRequestNotification($borrowRequest));
 
-        // Log the return request
         AuditLog::create([
             'user_id' => $user->id,
             'action' => 'return_request',
@@ -119,4 +111,3 @@ $borrowRequest->update([
         return redirect()->back()->with('success', 'Return request sent to staff. They will process it shortly.');
     }
 }
-

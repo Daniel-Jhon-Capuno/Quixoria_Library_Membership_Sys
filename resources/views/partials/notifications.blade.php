@@ -16,9 +16,13 @@
                                 </svg>
 
             <!-- Notification Badge - Perfectly positioned -->
-            @if($unreadCount > 0)
-                <span class="absolute -top-1 -right-1 block w-5 h-5 bg-red-600 ring-2 ring-slate-900/80 rounded-full flex items-center justify-center text-xs font-bold text-white shadow-lg translate-x-1/4 -translate-y-1/4">
-                    {{ min($unreadCount, 99) }}
+            <span id="notificationsUnreadBadge" class="absolute -top-1 -right-1 hidden w-5 h-5 bg-red-600 ring-2 ring-slate-900/80 rounded-full flex items-center justify-center text-xs font-bold text-white shadow-lg translate-x-1/4 -translate-y-1/4">
+                0
+            </span>
+
+            @if(auth()->user()->role === 'admin')
+                <span id="pendingSubsBadge" class="absolute -top-1 -left-3 hidden w-5 h-5 bg-yellow-600 ring-2 ring-slate-900/80 rounded-full flex items-center justify-center text-xs font-bold text-white shadow-lg -translate-y-1/4">
+                    0
                 </span>
             @endif
         </button>
@@ -73,8 +77,9 @@
                                             @case('overdue')
                                                 bg-gradient-to-br from-orange-500/20 to-red-500/20 border-orange-500/30 group-hover:border-orange-400/50
                                             @break
-                                        @case('borrow_rejected')
+@case('borrow_rejected')
                                             @case('subscription_rejected')
+                                                @case('borrow_return_rejected')
                                                 bg-gradient-to-br from-red-500/20 to-rose-500/20 border-red-500/30 group-hover:border-red-400/50
                                             @break
                                         @case('reservation_ready')
@@ -97,8 +102,9 @@
                                             @case('overdue')
                                                 <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6 0a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                                             @break
-                                        @case('borrow_rejected')
+@case('borrow_rejected')
                                             @case('subscription_rejected')
+                                                @case('borrow_return_rejected')
                                                 <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"></path>
                                             @break
                                         @case('reservation_ready')
@@ -133,5 +139,74 @@
             @endif
         </div>
     </div>
+    @if(auth()->user()->role === 'admin')
+        <script>
+            (function() {
+                const unreadEl = document.getElementById('notificationsUnreadBadge');
+                const pendingEl = document.getElementById('pendingSubsBadge');
+                const url = '{{ route('admin.subscriptions.counts') }}';
+
+                function updateBadges(data) {
+                    if (!data) return;
+                    // Unread notifications
+                    const unread = data.unread_notifications || 0;
+                    if (unread > 0) {
+                        unreadEl.textContent = Math.min(unread, 99);
+                        unreadEl.classList.remove('hidden');
+                    } else {
+                        unreadEl.classList.add('hidden');
+                    }
+
+                    // Pending subscriptions
+                    const pending = data.pending_subscriptions || 0;
+                    if (pending > 0) {
+                        pendingEl.textContent = Math.min(pending, 99);
+                        pendingEl.classList.remove('hidden');
+                    } else {
+                        pendingEl.classList.add('hidden');
+                    }
+                        // update compact sidebar mini badge if present
+                        const sidebarMini = document.getElementById('sidebarPendingMini');
+                        if (sidebarMini) {
+                            if (pending > 0) {
+                                sidebarMini.textContent = pending > 9 ? '9+' : pending;
+                                sidebarMini.classList.remove('hidden');
+                            } else {
+                                sidebarMini.classList.add('hidden');
+                            }
+                        }
+                        // sidebar badges removed; keep counts in notifications and subscriptions page
+                }
+
+                async function fetchCounts() {
+                    try {
+                        const res = await fetch(url, { credentials: 'same-origin' });
+                        if (!res.ok) return;
+                        const data = await res.json();
+                        updateBadges(data);
+                    } catch (e) {
+                        // silent
+                    }
+                }
+
+                // Initial server-rendered counts
+                fetchCounts();
+                // Poll every 15 seconds
+                setInterval(fetchCounts, 15000);
+            })();
+        </script>
+    @else
+        <script>
+            // Non-admin users: show unread notifications badge from server-rendered count
+            (function(){
+                const unreadEl = document.getElementById('notificationsUnreadBadge');
+                const count = {{ $unreadCount }};
+                if (count > 0) {
+                    unreadEl.textContent = Math.min(count,99);
+                    unreadEl.classList.remove('hidden');
+                }
+            })();
+        </script>
+    @endif
 @endif
 

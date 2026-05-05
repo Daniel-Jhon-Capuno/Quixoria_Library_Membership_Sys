@@ -65,6 +65,7 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::post('subscriptions/{subscription}/reject', [SubscriptionController::class, 'reject'])
         ->name('subscriptions.reject');
     Route::get('subscriptions/pending', [SubscriptionController::class, 'pending'])->name('subscriptions.pending');
+    Route::get('subscriptions/counts', [SubscriptionController::class, 'counts'])->name('subscriptions.counts');
     Route::post('subscriptions/bulk-confirm', [SubscriptionController::class, 'bulkConfirm'])->name('subscriptions.bulk-confirm');
     Route::post('subscriptions/bulk-reject', [SubscriptionController::class, 'bulkReject'])->name('subscriptions.bulk-reject');
     Route::get('reports', [ReportController::class, 'index'])->name('reports.index');
@@ -76,6 +77,11 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::get('reports/audit-logs', [ReportController::class, 'auditLogs'])->name('reports.audit-logs');
     // Exports for reports (CSV or PDF). Example: /admin/reports/most-borrowed-books/export?format=csv
     Route::get('reports/{report}/export', [ReportController::class, 'export'])->name('reports.export');
+    // Payments management for admins
+    Route::get('payments', [\App\Http\Controllers\Admin\PaymentController::class, 'index'])->name('payments.index');
+    Route::get('payments/{id}', [\App\Http\Controllers\Admin\PaymentController::class, 'show'])->name('payments.show');
+    Route::post('payments/{id}/confirm', [\App\Http\Controllers\Admin\PaymentController::class, 'confirm'])->name('payments.confirm');
+    Route::post('payments/{id}/reject', [\App\Http\Controllers\Admin\PaymentController::class, 'reject'])->name('payments.reject');
 });
 
 Route::middleware(['auth', 'role:staff'])->prefix('staff')->name('staff.')->group(function () {
@@ -84,8 +90,11 @@ Route::middleware(['auth', 'role:staff'])->prefix('staff')->name('staff.')->grou
     Route::get('borrow-requests/{id}/receipt', [StaffBorrowRequestController::class, 'downloadReceipt'])->name('borrow-requests.receipt');
     Route::post('borrow-requests/{id}/confirm', [StaffBorrowRequestController::class, 'confirm'])->name('borrow-requests.confirm');
     Route::get('borrow-requests/{id}/confirm', [StaffBorrowRequestController::class, 'showConfirm'])->name('borrow-requests.confirm.form');
-    Route::post('borrow-requests/{id}/reject', [StaffBorrowRequestController::class, 'reject'])->name('borrow-requests.reject');
-    Route::post('borrow-requests/{id}/reject-return', [StaffBorrowRequestController::class, 'rejectReturn'])->name('borrow-requests.reject-return');
+Route::post('borrow-requests/{id}/reject', [StaffBorrowRequestController::class, 'reject'])->name('borrow-requests.reject');
+Route::post('borrow-requests/{id}/reject-return', [StaffBorrowRequestController::class, 'rejectReturn'])->name('borrow-requests.reject-return');
+Route::get('appeals', [\App\Http\Controllers\Staff\AppealDashboardController::class, 'index'])->name('appeals.index');
+Route::post('appeals/{id}/complete', [\App\Http\Controllers\Staff\AppealDashboardController::class, 'complete'])->name('appeals.complete');
+Route::post('appeals/{id}/no-show', [\App\Http\Controllers\Staff\AppealDashboardController::class, 'noShow'])->name('appeals.no-show');
     Route::get('borrow-requests/{id}/reject', [StaffBorrowRequestController::class, 'showReject'])->name('borrow-requests.reject.form');
     Route::post('borrow-requests/{id}/check-in', [StaffBorrowRequestController::class, 'checkIn'])->name('borrow-requests.check-in');
     Route::get('deadline-dashboard', [DeadlineDashboardController::class, 'index'])->name('deadline-dashboard.index');
@@ -107,12 +116,18 @@ Route::middleware(['auth', 'role:student'])->prefix('student')->name('student.')
     Route::get('active-borrows', [ActiveBorrowController::class, 'index'])->name('active-borrows.index');
     Route::post('active-borrows/{id}/renew', [ActiveBorrowController::class, 'renew'])->name('active-borrows.renew');
     Route::post('active-borrows/{id}/return-request', [ActiveBorrowController::class, 'returnRequest'])->name('active-borrows.return-request');
+Route::post('active-borrows/{id}/appeal', [\App\Http\Controllers\Student\AppealController::class, 'store'])->name('active-borrows.appeal');
+Route::post('active-borrows/{id}/reschedule', [\App\Http\Controllers\Student\AppealController::class, 'reschedule'])->name('active-borrows.reschedule');
     Route::get('subscription', [StudentSubscriptionController::class, 'index'])->name('subscription.index');
     Route::post('subscription/purchase', [StudentSubscriptionController::class, 'purchase'])->name('subscription.purchase');
     Route::post('subscription/upgrade', [StudentSubscriptionController::class, 'upgrade'])->name('subscription.upgrade');
     Route::post('subscription/downgrade', [StudentSubscriptionController::class, 'downgrade'])->name('subscription.downgrade');
     Route::delete('subscription/cancel', [StudentSubscriptionController::class, 'cancel'])->name('subscription.cancel');
     Route::post('reservations', [ReservationController::class, 'store'])->name('reservations.store');
+    // Student payment routes
+    Route::get('payment/{tierId}', [\App\Http\Controllers\Student\PaymentController::class, 'show'])->name('payment.show');
+    Route::post('payment/{tierId}', [\App\Http\Controllers\Student\PaymentController::class, 'store'])->name('payment.store');
+    Route::get('payment/receipt/{paymentId}', [\App\Http\Controllers\Student\PaymentController::class, 'receipt'])->name('payment.receipt');
 });
 
 Route::middleware('auth')->group(function () {
@@ -126,6 +141,8 @@ Route::middleware('auth')->group(function () {
 Route::get('/settings', function() {
         return view('settings');
     })->middleware('auth')->name('settings');
+    // User preferences
+    Route::post('/user/preferences/sidebar-collapsed', [\App\Http\Controllers\UserPreferenceController::class, 'updateSidebar'])->name('user.preferences.sidebar-collapsed');
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');

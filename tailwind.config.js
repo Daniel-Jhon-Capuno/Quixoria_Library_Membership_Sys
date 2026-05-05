@@ -15,7 +15,9 @@ export default {
         extend: {
             fontFamily: {
                 sans: ['Inter', 'Figtree', ...defaultTheme.fontFamily.sans],
+                'space-grotesk': ['"Space Grotesk"', 'Inter', ...defaultTheme.fontFamily.sans],
             },
+
             fontWeight: {
                 normal: '400',
                 medium: '500', 
@@ -32,9 +34,13 @@ export default {
                 'success': '#10b981',
                 'warning': '#f59e0b',
                 'danger': '#ef4444',
+                'purple-mesh': '#7c3aed',
+                'teal-glow': '#0ea5e9',
+                'glass-border': 'rgba(124, 58, 237, 0.3)',
                 
                 // Semantic colors
                 'bg-primary': 'rgb(var(--bg-primary) / <alpha-value>)',
+
                 'bg-secondary': 'rgb(var(--bg-secondary) / <alpha-value>)',
                 'surface-primary': 'rgb(var(--surface-primary) / <alpha-value>)',
                 'surface-secondary': 'rgb(var(--surface-secondary) / <alpha-value>)',
@@ -44,9 +50,12 @@ export default {
             },
             boxShadow: {
                 'glow': '0 0 20px rgba(236, 72, 153, 0.1)',
+                'glass-glow': '0 0 0 1px rgba(124,58,237,0.5), 0 0 30px rgba(14,165,233,0.3), 0 25px 50px rgba(0,0,0,0.5)',
+                'feature-glow': '0 0 20px rgba(124,58,237,0.6)',
                 'card': '0 4px 6px rgba(0, 0, 0, 0.3)',
                 'card-light': '0 1px 3px rgba(0, 0, 0, 0.1)',
             },
+
             gridTemplateColumns: {
                 'sidebar': '200px 1fr',
                 'dashboard': 'repeat(auto-fit, minmax(300px, 1fr))',

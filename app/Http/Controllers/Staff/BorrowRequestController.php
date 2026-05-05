@@ -8,6 +8,7 @@ use App\Models\Reservation;
 use App\Models\Transaction;
 use App\Notifications\BorrowRequestConfirmedNotification;
 use App\Notifications\BorrowRequestRejectedNotification;
+use App\Notifications\ReturnRequestRejectedNotification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
@@ -107,11 +108,13 @@ class BorrowRequestController extends Controller
             // 3. Check weekly borrow limit - count by created_at since borrowed_at is not set yet for pending
             $weekStart = now()->startOfWeek();
             $weekEnd = now()->endOfWeek();
-            $weeklyBorrows = BorrowRequest::where('user_id', $student->id)
+            $weeklyBorrows = BorrowRequest::where('user_id', $borrowRequest->user_id)
                 ->whereIn('status', ['active', 'overdue', 'pending'])
                 ->whereBetween('created_at', [$weekStart, $weekEnd])
                 ->where('id', '!=', $borrowRequest->id)
                 ->count();
+
+
 
             if ($weeklyBorrows >= $tier->borrow_limit_per_week) {
                 $message = 'Student has reached their weekly borrow limit.';
@@ -225,22 +228,31 @@ class BorrowRequestController extends Controller
         return back()->with('success', 'Request rejected.');
     }
 
-    public function rejectReturn($id)
+    public function rejectReturn(Request $request, $id)
     {
+        $request->validate([
+            'rejection_reason' => 'required|string|max:500'
+        ]);
+
         $borrowRequest = BorrowRequest::with('student')->findOrFail($id);
 
         if ($borrowRequest->status !== 'return_requested') {
             return back()->with('error', 'Only return requests can be rejected.');
         }
 
-        $borrowRequest->update([
-            'status' => 'active',
+        $borrowRequest->fill([
+'status' => 'return_rejected',
             'handled_by' => Auth::id(),
-            'rejection_reason' => 'Return request rejected by staff',
-        ]);
+            'rejection_reason' => $request->rejection_reason,
+        ])->save();
 
-        return redirect()->route('staff.borrow-requests.index')->with('success', 'Return request rejected.');
+        // Notify student
+        $borrowRequest->fresh()->student->notifyNow(new ReturnRequestRejectedNotification($borrowRequest));
+
+
+        return redirect()->route('staff.borrow-requests.index')->with('success', 'Return request rejected with reason sent to student.');
     }
+
 
     public function checkIn($id)
     {
@@ -303,6 +315,73 @@ class BorrowRequestController extends Controller
             // Notify the student that the book is now available
             // $nextReservation->student->notify(new BookAvailableNotification($nextReservation));
         }
+    }
+
+    public function appeals()
+    {
+        $appeals = BorrowRequest::with(['student', 'book', 'student.subscription'])
+            ->where('status', 'return_rejected')
+            ->where('appeal_status', '!=', 'none')
+            ->orderBy('updated_at', 'desc')
+            ->paginate(20);
+
+        return view('staff.borrow-requests.appeals', compact('appeals'));
+    }
+
+    public function scheduleAppeal($id)
+    {
+        $borrowRequest = BorrowRequest::with('student')->findOrFail($id);
+
+        if ($borrowRequest->status !== 'return_rejected' || $borrowRequest->appeal_status !== 'pending') {
+            return back()->with('error', 'Cannot schedule this appeal.');
+        }
+
+        $borrowRequest->update([
+            'appeal_status' => 'scheduled',
+            'appeal_scheduled_at' => now()->addDays(3),
+            'handled_by' => Auth::id(),
+        ]);
+
+        AuditLog::create([
+            'user_id' => Auth::id(),
+            'action' => 'appeal_scheduled',
+            'model_type' => 'App\\Models\\BorrowRequest',
+            'model_id' => $borrowRequest->id,
+            'changes' => json_encode([
+                'scheduled_date' => $borrowRequest->appeal_scheduled_at->format('Y-m-d H:i'),
+                'student_name' => $borrowRequest->student->name,
+                'book_title' => $borrowRequest->book->title,
+            ])
+        ]);
+
+        return back()->with('success', 'Appeal scheduled for review.');
+    }
+
+    public function denyAppeal($id)
+    {
+        $borrowRequest = BorrowRequest::with('student')->findOrFail($id);
+
+        if ($borrowRequest->status !== 'return_rejected' || $borrowRequest->appeal_status !== 'pending') {
+            return back()->with('error', 'Cannot deny this appeal.');
+        }
+
+        $borrowRequest->update([
+            'appeal_status' => 'denied',
+            'handled_by' => Auth::id(),
+        ]);
+
+        AuditLog::create([
+            'user_id' => Auth::id(),
+            'action' => 'appeal_denied',
+            'model_type' => 'App\\Models\\BorrowRequest',
+            'model_id' => $borrowRequest->id,
+            'changes' => json_encode([
+                'student_name' => $borrowRequest->student->name,
+                'book_title' => $borrowRequest->book->title,
+            ])
+        ]);
+
+        return back()->with('success', 'Appeal denied.');
     }
 
     public function downloadReceipt($id)

@@ -32,6 +32,13 @@
                 </form>
                 </div>
             </div>
+            <div class="mb-6 flex items-center gap-3">
+                <a href="{{ route('admin.subscriptions.index') }}" class="px-3 py-2 rounded-md {{ request('status') ? 'text-slate-300' : 'bg-cyan-600 text-white' }}">All ({{ $subscriptions->total() }})</a>
+                <a href="{{ route('admin.subscriptions.index', ['status' => 'pending']) }}" class="px-3 py-2 rounded-md {{ request('status') === 'pending' ? 'bg-yellow-600 text-white' : 'text-slate-300' }}">Pending @if(isset($pendingCount))<span class="ml-2 inline-block px-2 py-0.5 rounded-full text-xs bg-yellow-700 text-white">{{ $pendingCount }}</span>@endif</a>
+                <a href="{{ route('admin.subscriptions.index', ['status' => 'active']) }}" class="px-3 py-2 rounded-md {{ request('status') === 'active' ? 'bg-green-600 text-white' : 'text-slate-300' }}">Active @if(isset($activeCount))<span class="ml-2 inline-block px-2 py-0.5 rounded-full text-xs bg-green-700 text-white">{{ $activeCount }}</span>@endif</a>
+                <a href="{{ route('admin.subscriptions.index', ['status' => 'expired']) }}" class="px-3 py-2 rounded-md {{ request('status') === 'expired' ? 'bg-red-600 text-white' : 'text-slate-300' }}">Expired @if(isset($expiredCount))<span class="ml-2 inline-block px-2 py-0.5 rounded-full text-xs bg-red-700 text-white">{{ $expiredCount }}</span>@endif</a>
+                <a href="{{ route('admin.subscriptions.index', ['status' => 'cancelled']) }}" class="px-3 py-2 rounded-md {{ request('status') === 'cancelled' ? 'bg-slate-600 text-white' : 'text-slate-300' }}">Cancelled @if(isset($cancelledCount))<span class="ml-2 inline-block px-2 py-0.5 rounded-full text-xs bg-slate-700 text-white">{{ $cancelledCount }}</span>@endif</a>
+            </div>
             <div class="card">
                 <div class="card-body p-0">
                 <table class="min-w-full divide-y divide-slate-700">
@@ -63,18 +70,8 @@
                                 <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-100">{{ $subscription->starts_at?->format('M d, Y') }}</td>
                                 <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-100">{{ $subscription->ends_at?->format('M d, Y') }}</td>
                                 <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-100">${{ number_format($subscription->amount_paid, 2) }}</td>
-                                <td class="px-4 py-4 whitespace-nowrap text-right text-sm font-medium space-x-2">
+                                <td class="px-4 py-4 whitespace-nowrap text-right text-sm font-medium">
                                     <a href="{{ route('admin.subscriptions.show', $subscription) }}" class="text-gray-100 hover:text-gray-300">View Details</a>
-                                    @if($subscription->status === 'pending')
-                                        <form method="POST" action="{{ route('admin.subscriptions.confirm', $subscription) }}" class="inline-block">
-                                            @csrf
-                                            <button type="submit" class="btn-primary ml-2">Approve</button>
-                                        </form>
-                                        <form method="POST" action="{{ route('admin.subscriptions.reject', $subscription) }}" class="inline-block">
-                                            @csrf
-                                            <button type="submit" class="btn-secondary ml-2">Reject</button>
-                                        </form>
-                                    @endif
                                 </td>
                             </tr>
                         @endforeach

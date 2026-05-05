@@ -23,7 +23,7 @@
                 <!-- Logo & Branding -->
                 <div class="mx-auto max-w-md w-24 h-24 rounded-2xl flex items-center justify-center mb-8 shadow-2xl"
                      style="background: linear-gradient(to bottom right, rgba(100, 200, 255, 0.3), rgba(0, 255, 200, 0.3)); border: 1px solid rgba(100, 200, 255, 0.2);">
-                    <svg class="w-16 h-16 text-cyan-400 drop-shadow-lg" fill="currentColor" viewBox="0 0 20 20">
+                    <img src="/images/logo.png" alt="Quixoria" class="w-16 h-16 drop-shadow-lg object-contain">
                         <path d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4z"></path>
                         <path fill-rule="evenodd" d="M3 10a1 1 0 011-1h12a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6z" clip-rule="evenodd"></path>
                     </svg>

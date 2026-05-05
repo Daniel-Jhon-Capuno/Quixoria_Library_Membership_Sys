@@ -66,6 +66,15 @@
                                     </svg>
                                     OVERDUE
                                 </div>
+                            @elseif(in_array($borrow->status, ['rejected', 'return_rejected']) && $borrow->rejection_reason)
+                                <x-reject-reason-toggle :borrow="$borrow" />
+                            @elseif($borrow->appeal_status !== 'none')
+                                <div class="inline-flex items-center px-4 py-2 rounded-full text-sm font-bold bg-gradient-to-r from-amber-600 to-orange-600 text-white shadow-lg">
+                                    <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"></path>
+                                    </svg>
+                                    {{ ucfirst($borrow->appeal_status) }} Appeal
+                                </div>
                             @else
                                 <div class="inline-flex items-center px-4 py-2 rounded-full text-sm font-bold bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-lg">
                                     <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
@@ -88,40 +97,74 @@
                         </div>
                     </div>
 
-                    <!-- Action Buttons - Fixed Layout -->
+                    <!-- Action Buttons -->
                     <div class="space-y-3">
                         @php
                             $canRenew = $borrow->renewals_used < (auth()->user()->subscription?->membershipTier?->renewal_limit ?? 0)
-                                          && !$borrow->due_at->isPast();
+                                        && !$borrow->due_at->isPast()
+                                        && in_array($borrow->status, ['active', 'overdue']);
                         @endphp
 
                         @if($canRenew)
                             <form method="POST" action="{{ route('student.active-borrows.renew', $borrow->id) }}" class="block">
                                 @csrf
-                                <button type="submit" class="w-full px-6 py-4 bg-gradient-to-r from-cyan-600 to-cyan-700 hover:from-cyan-700 hover:to-cyan-800 text-white font-bold rounded-2xl shadow-xl hover:shadow-2xl hover:-translate-y-0.5 transition-all duration-200 text-lg focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:ring-offset-2 focus:ring-offset-slate-900 flex items-center justify-center gap-2">
+                                <button type="submit" class="w-full px-6 py-4 bg-gradient-to-r from-cyan-600 to-cyan-700 hover:from-cyan-700 hover:to-cyan-800 text-white font-bold rounded-2xl shadow-xl hover:shadow-2xl hover:-translate-y-0.5 transition-all duration-200 text-lg flex items-center justify-center gap-2">
                                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
                                     </svg>
                                     Renew Book
                                 </button>
                             </form>
-                        @else
+                        @elseif(in_array($borrow->status, ['active', 'overdue']))
                             <div class="w-full px-6 py-4 bg-slate-800/80 border-2 border-dashed border-slate-600 rounded-2xl text-center text-slate-400">
                                 <div class="text-sm font-medium mb-1">{{ $borrow->due_at->isPast() ? 'Overdue - Cannot Renew' : 'Max Renewals Reached' }}</div>
                                 <div class="text-xs">Return first or wait for due date</div>
                             </div>
                         @endif
 
-                        <!-- Request Return Button -->
-                        <form method="POST" action="{{ route('student.active-borrows.return-request', $borrow->id) }}" class="block">
-                            @csrf
-                            <button type="submit" class="w-full px-6 py-4 bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white font-bold rounded-2xl shadow-xl hover:shadow-2xl hover:-translate-y-0.5 transition-all duration-200 text-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 focus:ring-offset-slate-900 flex items-center justify-center gap-2">
-                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path>
-                                </svg>
-                                Request Return
-                            </button>
-                        </form>
+                        @if(in_array($borrow->status, ['active', 'overdue']))
+                            <form method="POST" action="{{ route('student.active-borrows.return-request', $borrow->id) }}" class="block" onsubmit="return confirm('Are you sure you wish to return this book? Staff will be notified to arrange pickup. Yes or Cancel?');">
+                                @csrf
+                                <button type="submit" class="w-full px-6 py-4 bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white font-bold rounded-2xl shadow-xl hover:shadow-2xl hover:-translate-y-0.5 transition-all duration-200 text-lg flex items-center justify-center gap-2">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path>
+                                    </svg>
+                                    Request Return
+                                </button>
+                            </form>
+                        @elseif($borrow->status === 'return_requested')
+                            <div class="w-full px-6 py-4 bg-yellow-800/40 border border-yellow-600/50 rounded-2xl text-center text-yellow-300 font-semibold">
+                                ⏳ Return Pending Staff Approval
+                            </div>
+                        @elseif($borrow->status === 'return_rejected' && $borrow->appeal_status === 'none')
+                            <div class="w-full px-4 py-3 bg-red-900/40 border border-red-600/50 rounded-2xl text-red-300 text-sm mb-3">
+                                ❌ Return Rejected: {{ $borrow->rejection_reason }}
+                            </div>
+                            <form method="POST" action="{{ route('student.active-borrows.appeal', $borrow->id) }}" class="space-y-3">
+                                @csrf
+                                <textarea name="appeal_reason" rows="2" required placeholder="Explain your appeal..." class="w-full bg-slate-900/80 border border-slate-700 text-slate-100 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-cyan-500 focus:border-transparent"></textarea>
+                                <input type="datetime-local" name="appeal_scheduled_at" required min="{{ now()->addHours(1)->format('Y-m-d\TH:i') }}" class="w-full bg-slate-900/80 border border-slate-700 text-slate-100 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-cyan-500 focus:border-transparent">
+                                <button type="submit" class="w-full px-6 py-4 bg-gradient-to-r from-yellow-600 to-yellow-700 hover:from-yellow-700 hover:to-yellow-800 text-white font-bold rounded-2xl shadow-xl transition-all duration-200 text-lg flex items-center justify-center gap-2">
+                                    📋 Submit Appeal
+                                </button>
+                            </form>
+                        @elseif(in_array($borrow->status, ['appeal_scheduled', 'appeal_rescheduled']))
+                            <div class="w-full px-4 py-3 bg-yellow-800/40 border border-yellow-600/50 rounded-2xl text-yellow-300 text-sm text-center font-semibold">
+                                📅 Appeal Scheduled: {{ \Carbon\Carbon::parse($borrow->appeal_scheduled_at)->format('M j, Y g:i A') }}<br>
+                                <span class="text-xs font-normal">Please visit the branch at your scheduled time.</span>
+                            </div>
+                        @elseif($borrow->status === 'appeal_no_show')
+                            <div class="w-full px-4 py-3 bg-red-900/40 border border-red-600/50 rounded-2xl text-red-300 text-sm mb-3 text-center">
+                                ❌ You missed your appeal schedule. Please reschedule.
+                            </div>
+                            <form method="POST" action="{{ route('student.active-borrows.reschedule', $borrow->id) }}" class="space-y-3">
+                                @csrf
+                                <input type="datetime-local" name="appeal_scheduled_at" required min="{{ now()->addHours(1)->format('Y-m-d\TH:i') }}" class="w-full bg-slate-900/80 border border-slate-700 text-slate-100 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-cyan-500 focus:border-transparent">
+                                <button type="submit" class="w-full px-6 py-4 bg-gradient-to-r from-yellow-600 to-yellow-700 hover:from-yellow-700 hover:to-yellow-800 text-white font-bold rounded-2xl shadow-xl transition-all duration-200 text-lg flex items-center justify-center gap-2">
+                                    🔄 Reschedule Appeal
+                                </button>
+                            </form>
+                        @endif
 
                         <a href="{{ route('student.book-catalog.show', $borrow->book) }}" class="block w-full text-center px-6 py-4 bg-gradient-to-r from-slate-700 to-slate-800 hover:from-slate-600 hover:to-slate-700 text-slate-200 font-semibold rounded-2xl shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all duration-200 text-lg border border-slate-600 hover:border-slate-500 flex items-center justify-center gap-2">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

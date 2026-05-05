@@ -22,7 +22,12 @@ class SubscriptionController extends Controller
             $query->where('status', $request->status);
         }
         $subscriptions = $query->orderBy('created_at', 'desc')->paginate(15)->withQueryString();
-        return view('admin.subscriptions.index', compact('subscriptions'));
+        $pendingCount = Subscription::where('status', 'pending')->count();
+        $activeCount = Subscription::where('status', 'active')->count();
+        $expiredCount = Subscription::where('status', 'expired')->count();
+        $cancelledCount = Subscription::where('status', 'cancelled')->count();
+
+        return view('admin.subscriptions.index', compact('subscriptions', 'pendingCount', 'activeCount', 'expiredCount', 'cancelledCount'));
     }
 
     public function show(Subscription $subscription)
@@ -231,15 +236,28 @@ class SubscriptionController extends Controller
         ]);
 
         try {
+            \Illuminate\Support\Facades\Log::info('Admin reject called', [
+                'subscription_id' => $subscription->id,
+                'request' => $request->all(),
+                'user_id' => auth()->id(),
+            ]);
             $subscription->status = 'rejected';
             $subscription->rejection_reason = $request->input('reason');
             $subscription->save();
 
+            \Illuminate\Support\Facades\Log::info('Subscription rejected', [
+                'subscription_id' => $subscription->id,
+                'new_status' => $subscription->status,
+            ]);
             // Notify student
             $subscription->user->notifyNow(new StudentSubscriptionRejectedNotification($subscription));
 
             return back()->with('success', 'Subscription rejected.');
         } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('Subscription rejection failed', [
+                'subscription_id' => $subscription->id,
+                'error' => $e->getMessage(),
+            ]);
             return back()->withErrors(['error' => 'Rejection failed: ' . $e->getMessage()]);
         }
     }
@@ -254,6 +272,23 @@ class SubscriptionController extends Controller
         $subscriptions = $query->paginate(25)->withQueryString();
 
         return view('admin.subscriptions.pending', compact('subscriptions'));
+    }
+
+    // Return counts used by admin UI (polling)
+    public function counts(Request $request)
+    {
+        $user = auth()->user();
+        if (!$user || $user->role !== 'admin') {
+            abort(403);
+        }
+
+        $pending = Subscription::where('status', 'pending')->count();
+        $unread = $user->unreadNotifications()->count();
+
+        return response()->json([
+            'pending_subscriptions' => $pending,
+            'unread_notifications' => $unread,
+        ]);
     }
 
     // Bulk confirm selected subscriptions
