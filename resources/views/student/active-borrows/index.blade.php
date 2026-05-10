@@ -18,7 +18,7 @@
                             </select>
                         </div>
                         <div>
-                            <button type="submit" class="inline-flex items-center px-6 py-3 bg-gradient-to-r from-cyan-600 to-cyan-700 border border-transparent rounded-xl font-semibold text-sm text-white uppercase tracking-wide hover:from-cyan-700 hover:to-cyan-800 shadow-lg hover:shadow-xl transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:ring-offset-2 focus:ring-offset-slate-900">
+                            <button type="submit" class="inline-flex items-center px-6 py-3 bg-gradient-to-r from-cyan-600 to-cyan-700 border border-transparent rounded-xl font-semibold text-sm text-white uppercase tracking-wide hover:from-cyan-700 hover:to-cyan-800 shadow-lg hover:shadow-xl transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:ring-offset-2 focus:ring-offset-slate-900 w-full md:w-auto min-h-[44px]">
                                 <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 000 2h1.25l.707 3.293A1 1 0 006.07 9h11.86a1 1 0 00.977-.857l1.256-5.986A1 1 0 0020 2H4a1 1 0 000 2zM4 10a1 1 0 01-1-1V7a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4zM9 13a1 1 0 01-1-1V12a1 1 0 011-1h6a1 1 0 011 1v1a1 1 0 01-1 1H9z"></path>
                                 </svg>
@@ -60,7 +60,7 @@
                         <div class="text-2xl font-black text-white mb-2">{{ $borrow->due_at->format('M j, Y') }}</div>
                         <div class="flex items-center">
                             @if($borrow->due_at->isPast())
-                                <div class="inline-flex items-center px-4 py-2 rounded-full text-sm font-bold bg-gradient-to-r from-red-600 to-red-700 text-white shadow-lg">
+                                <div class="inline-flex items-center px-4 py-2 rounded-full text-sm font-bold bg-black text-white shadow-lg">
                                     <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
                                         <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"></path>
                                     </svg>
@@ -69,14 +69,14 @@
                             @elseif(in_array($borrow->status, ['rejected', 'return_rejected']) && $borrow->rejection_reason)
                                 <x-reject-reason-toggle :borrow="$borrow" />
                             @elseif($borrow->appeal_status !== 'none')
-                                <div class="inline-flex items-center px-4 py-2 rounded-full text-sm font-bold bg-gradient-to-r from-amber-600 to-orange-600 text-white shadow-lg">
+                                <div class="inline-flex items-center px-4 py-2 rounded-full text-sm font-bold bg-black text-white shadow-lg">
                                     <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
                                         <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"></path>
                                     </svg>
                                     {{ ucfirst($borrow->appeal_status) }} Appeal
                                 </div>
                             @else
-                                <div class="inline-flex items-center px-4 py-2 rounded-full text-sm font-bold bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-lg">
+                                <div class="inline-flex items-center px-4 py-2 rounded-full text-sm font-bold bg-black text-white shadow-lg">
                                     <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
                                         <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"></path>
                                     </svg>
@@ -91,7 +91,7 @@
                         <div class="text-xs font-semibold uppercase tracking-wide text-slate-500 mb-2">Renewals</div>
                         <div class="flex items-center space-x-2">
                             <div class="w-12 h-3 bg-slate-700 rounded-full overflow-hidden">
-                                <div class="h-full bg-gradient-to-r from-emerald-500 to-teal-500" style="width: {{ min(100, ($borrow->renewals_used / max(1, auth()->user()->subscription?->membershipTier?->renewal_limit ?? 1)) * 100) }}%"></div>
+                                <div class="h-full bg-black" style="width: {{ min(100, ($borrow->renewals_used / max(1, auth()->user()->subscription?->membershipTier?->renewal_limit ?? 1)) * 100) }}%"></div>
                             </div>
                             <span class="text-lg font-bold text-slate-200">{{ $borrow->renewals_used }} / {{ auth()->user()->subscription?->membershipTier?->renewal_limit ?? 'N/A' }}</span>
                         </div>
@@ -106,9 +106,9 @@
                         @endphp
 
                         @if($canRenew)
-                            <form method="POST" action="{{ route('student.active-borrows.renew', $borrow->id) }}" class="block">
+                                <form method="POST" action="{{ route('student.active-borrows.renew', $borrow->id) }}" class="block">
                                 @csrf
-                                <button type="submit" class="w-full px-6 py-4 bg-gradient-to-r from-cyan-600 to-cyan-700 hover:from-cyan-700 hover:to-cyan-800 text-white font-bold rounded-2xl shadow-xl hover:shadow-2xl hover:-translate-y-0.5 transition-all duration-200 text-lg flex items-center justify-center gap-2">
+                                <button type="submit" class="w-full px-6 py-4 bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white font-bold rounded-2xl shadow-xl hover:shadow-2xl hover:-translate-y-0.5 transition-all duration-200 text-lg flex items-center justify-center gap-2" data-confirm="Renew this borrow?">
                                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
                                     </svg>
@@ -123,15 +123,24 @@
                         @endif
 
                         @if(in_array($borrow->status, ['active', 'overdue']))
-                            <form method="POST" action="{{ route('student.active-borrows.return-request', $borrow->id) }}" class="block" onsubmit="return confirm('Are you sure you wish to return this book? Staff will be notified to arrange pickup. Yes or Cancel?');">
+                            <form method="POST" action="{{ route('student.active-borrows.return-request', $borrow->id) }}" class="block" data-confirm="Are you sure you wish to return this book? Staff will be notified to arrange pickup. Continue?">
                                 @csrf
-                                <button type="submit" class="w-full px-6 py-4 bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white font-bold rounded-2xl shadow-xl hover:shadow-2xl hover:-translate-y-0.5 transition-all duration-200 text-lg flex items-center justify-center gap-2">
+                                <button type="submit" class="w-full px-6 py-4 bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white font-bold rounded-2xl shadow-xl hover:shadow-2xl hover:-translate-y-0.5 transition-all duration-200 text-lg flex items-center justify-center gap-2">
                                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path>
                                     </svg>
                                     Request Return
                                 </button>
                             </form>
+
+                            @if($borrow->due_at->isPast())
+                                    <button onclick="openLostBookModal({{ $borrow->id }})" class="w-full px-6 py-4 bg-red-900/60 hover:bg-red-900 text-red-200 font-bold rounded-2xl shadow-xl hover:shadow-2xl hover:-translate-y-0.5 transition-all duration-200 text-lg flex items-center justify-center gap-2 border border-red-600/50">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4v.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                        </svg>
+                                        Report Lost Book
+                                    </button>
+                            @endif
                         @elseif($borrow->status === 'return_requested')
                             <div class="w-full px-6 py-4 bg-yellow-800/40 border border-yellow-600/50 rounded-2xl text-center text-yellow-300 font-semibold">
                                 ⏳ Return Pending Staff Approval
@@ -166,12 +175,12 @@
                             </form>
                         @endif
 
-                        <a href="{{ route('student.book-catalog.show', $borrow->book) }}" class="block w-full text-center px-6 py-4 bg-gradient-to-r from-slate-700 to-slate-800 hover:from-slate-600 hover:to-slate-700 text-slate-200 font-semibold rounded-2xl shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all duration-200 text-lg border border-slate-600 hover:border-slate-500 flex items-center justify-center gap-2">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
-                            </svg>
-                            View Book Details
-                        </a>
+                            <a href="{{ route('student.book-catalog.show', $borrow->book) }}" class="block w-full text-center px-6 py-4 bg-slate-700 hover:bg-slate-600 text-white font-semibold rounded-2xl shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all duration-200 text-lg border border-slate-500 flex items-center justify-center gap-2">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
+                                </svg>
+                                View Book Details
+                            </a>
                     </div>
                 </div>
                 @empty
@@ -182,7 +191,7 @@
                         </svg>
                         <h3 class="text-2xl font-bold text-slate-200 mb-4">No Active Borrows</h3>
                         <p class="text-lg text-slate-500 mb-8 max-w-md mx-auto leading-relaxed">You don't have any books currently borrowed. Start browsing our library!</p>
-                        <a href="{{ route('student.book-catalog.index') }}" class="inline-flex items-center px-8 py-4 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-bold rounded-2xl shadow-xl hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 text-lg">
+                        <a href="{{ route('student.book-catalog.index') }}" class="inline-flex items-center px-4 py-2 sm:px-8 sm:py-4 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-bold rounded-2xl shadow-xl hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 text-sm sm:text-lg w-full md:w-auto min-h-[44px]">
                             <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
                             </svg>
@@ -218,4 +227,98 @@
             @endif
         </div>
     </div>
+
+<!-- Lost Book Modal -->
+<div id="lostBookModal" class="hidden fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    <div class="bg-slate-800 rounded-2xl border border-slate-700 p-8 max-w-md w-full shadow-2xl">
+        <h3 class="text-2xl font-bold text-white mb-2">Report Lost Book</h3>
+        <p class="text-slate-400 mb-6">⚠️ Once reported, this book cannot be recovered through the system.</p>
+        
+        <div id="lostBookDetails" class="bg-slate-900/50 p-4 rounded-lg mb-6 space-y-3">
+            <div>
+                <p class="text-xs font-semibold text-slate-400">Book</p>
+                <p id="lostBookTitle" class="text-white font-bold"></p>
+            </div>
+            <div>
+                <p class="text-xs font-semibold text-slate-400">Days Overdue</p>
+                <p id="lostBookDays" class="text-white font-bold"></p>
+            </div>
+            <div class="pt-3 border-t border-slate-700">
+                <p class="text-xs font-semibold text-slate-400 mb-2">Total Due</p>
+                <div class="space-y-1">
+                    <div class="flex justify-between">
+                        <span class="text-slate-300">Late Fees:</span>
+                        <span id="lostBookLateFees" class="text-white font-bold">₱0</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-slate-300">Replacement:</span>
+                        <span id="lostBookReplacement" class="text-white font-bold">₱0</span>
+                    </div>
+                    <div class="flex justify-between text-lg pt-1 border-t border-slate-700 mt-1">
+                        <span class="text-cyan-400 font-bold">Total:</span>
+                        <span id="lostBookTotal" class="text-cyan-300 font-bold">₱0</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="flex gap-3">
+            <button onclick="closeLostBookModal()" class="flex-1 px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-lg font-medium">Cancel</button>
+            <button onclick="confirmLostBook()" id="lostBookConfirmBtn" class="flex-1 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium">Confirm Report</button>
+        </div>
+    </div>
+</div>
+
+<script>
+let currentLostBookId = null;
+
+function openLostBookModal(borrowRequestId) {
+    currentLostBookId = borrowRequestId;
+    
+    // Fetch fee details
+    fetch(`/student/active-borrows/${borrowRequestId}/lost/confirm`)
+        .then(r => r.json())
+        .then(data => {
+            document.getElementById('lostBookTitle').textContent = data.book_title;
+            document.getElementById('lostBookDays').textContent = data.days_overdue + ' days';
+            document.getElementById('lostBookLateFees').textContent = '₱' + data.late_fee_pesos;
+            document.getElementById('lostBookReplacement').textContent = '₱' + data.replacement_fee_pesos;
+            document.getElementById('lostBookTotal').textContent = '₱' + data.total_pesos;
+            document.getElementById('lostBookModal').classList.remove('hidden');
+        });
+}
+
+function closeLostBookModal() {
+    document.getElementById('lostBookModal').classList.add('hidden');
+    currentLostBookId = null;
+}
+
+function confirmLostBook() {
+    if (!currentLostBookId) return;
+    
+    document.getElementById('lostBookConfirmBtn').disabled = true;
+    document.getElementById('lostBookConfirmBtn').textContent = 'Processing...';
+    
+    fetch(`/student/active-borrows/${currentLostBookId}/lost`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+        },
+        body: JSON.stringify({})
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.success) {
+            alert('Book reported as lost. You can view details in the admin dashboard.');
+            window.location.reload();
+        } else {
+            alert('Error: ' + (data.message || 'Could not report book'));
+            document.getElementById('lostBookConfirmBtn').disabled = false;
+            document.getElementById('lostBookConfirmBtn').textContent = 'Confirm Report';
+        }
+    });
+}
+</script>
+
 </x-app-layout>

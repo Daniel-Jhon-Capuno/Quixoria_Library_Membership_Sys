@@ -120,7 +120,7 @@
                         </div>
 
                         <button type="button" onclick="openConfirmModal()"
-                            class="w-full mt-6 px-6 py-4 bg-gradient-to-r from-cyan-600 to-cyan-700 hover:from-cyan-700 hover:to-cyan-800 text-white font-bold rounded-2xl shadow-xl transition-all duration-200 text-lg">
+                            class="w-full mt-6 px-6 py-4 bg-gradient-to-r from-cyan-600 to-cyan-700 hover:from-cyan-700 hover:to-cyan-800 text-white font-bold rounded-2xl shadow-xl transition-all duration-200 text-sm md:text-base min-h-[44px]">
                             Review & Confirm Payment
                         </button>
                     </form>
@@ -131,7 +131,7 @@
 
     <!-- Confirmation Modal -->
     <div id="confirmModal" class="fixed inset-0 bg-black bg-opacity-60 hidden items-center justify-center z-50">
-        <div class="bg-slate-800 rounded-2xl p-8 max-w-md w-full mx-4 border border-slate-700 shadow-2xl">
+        <div class="bg-slate-800 rounded-2xl p-8 max-w-md md:w-96 w-full mx-4 md:mx-auto border border-slate-700 shadow-2xl">
             <h3 class="text-xl font-bold text-white mb-4">Confirm Payment</h3>
             <p class="text-slate-300 mb-2">You are about to purchase:</p>
                 <div class="bg-slate-900/50 rounded-xl p-4 mb-6 border border-slate-700">
@@ -139,11 +139,11 @@
                 <div class="text-cyan-400 font-bold text-2xl">₱{{ number_format($tier->monthly_fee, 2) }}/month</div>
             </div>
             <p class="text-slate-400 text-sm mb-6">Are you sure your billing information is correct? This will be submitted for admin review.</p>
-                <div class="flex gap-3">
-                <button onclick="closeConfirmModal()" class="flex-1 px-4 py-3 bg-slate-700 hover:bg-slate-600 text-white rounded-xl font-semibold transition-all">
+                <div class="flex flex-col md:flex-row gap-3">
+                <button onclick="closeConfirmModal()" class="w-full md:flex-1 px-4 py-3 bg-slate-700 hover:bg-slate-600 text-white rounded-xl font-semibold transition-all min-h-[44px] text-sm md:text-base">
                     Go Back
                 </button>
-                <button id="confirmSubmitBtn" type="button" onclick="submitPaymentForm(this)" class="flex-1 px-4 py-3 bg-gradient-to-r from-cyan-600 to-cyan-700 hover:from-cyan-700 hover:to-cyan-800 text-white rounded-xl font-semibold transition-all">
+                <button id="confirmSubmitBtn" type="button" onclick="submitPaymentForm(this)" class="w-full md:flex-1 px-4 py-3 bg-gradient-to-r from-cyan-600 to-cyan-700 hover:from-cyan-700 hover:to-cyan-800 text-white rounded-xl font-semibold transition-all min-h-[44px] text-sm md:text-base">
                     Confirm Payment
                 </button>
             </div>

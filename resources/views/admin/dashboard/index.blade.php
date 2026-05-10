@@ -2,12 +2,14 @@
     <x-slot name="header">
         <div class="flex items-center justify-between">
                 <div>
-                <h1 class="text-3xl font-bold text-gray-100">Dashboard</h1>
+                    <h1 class="text-2xl md:text-3xl font-bold text-gray-100">Dashboard</h1>
                 <p class="text-sm mt-1 text-gray-400">Welcome back! Here's what's happening in your library.</p>
             </div>
             <div></div>
         </div>
     </x-slot>
+
+    <div class="admin-dashboard">
 
     <!-- Stats Grid -->
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
@@ -146,7 +148,7 @@
         <div class="card">
             <div class="card-body">
             <h3 class="font-semibold mb-4 text-gray-100">Revenue</h3>
-            <p class="text-4xl font-bold mb-2 text-gray-100">${{ number_format($monthlyRevenue ?? 0, 2) }}</p>
+            <p class="text-2xl md:text-4xl font-bold mb-2 text-gray-100">${{ number_format($monthlyRevenue ?? 0, 2) }}</p>
             <p class="text-sm mb-6 text-gray-400">This month</p>
             <div class="space-y-3">
                 <div class="flex justify-between items-center text-sm">
@@ -171,15 +173,15 @@
             <div class="space-y-4">
                 <div>
                     <p class="text-sm text-gray-400">Books Borrowed Today</p>
-                    <p class="text-2xl font-bold mt-1 text-gray-100">{{ rand(15, 45) }}</p>
+                    <p class="text-xl md:text-2xl font-bold mt-1 text-gray-100">{{ rand(15, 45) }}</p>
                 </div>
                 <div>
                     <p class="text-sm text-gray-400">New Registrations</p>
-                    <p class="text-2xl font-bold mt-1 text-gray-100">{{ rand(5, 15) }}</p>
+                    <p class="text-xl md:text-2xl font-bold mt-1 text-gray-100">{{ rand(5, 15) }}</p>
                 </div>
                 <div>
                     <p class="text-sm text-gray-400">System Health</p>
-                    <p class="text-2xl font-bold mt-1 text-gray-100">99.8%</p>
+                    <p class="text-xl md:text-2xl font-bold mt-1 text-gray-100">99.8%</p>
                 </div>
             </div>
             </div>
@@ -242,5 +244,6 @@
                 </tbody>
             </table>
         </div>
+    </div>
     </div>
 </x-app-layout>

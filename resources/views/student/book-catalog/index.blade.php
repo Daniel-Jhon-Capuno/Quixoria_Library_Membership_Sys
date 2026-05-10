@@ -3,7 +3,7 @@
         <h2 class="font-semibold text-xl text-gray-100 leading-tight">Book Catalog</h2>
     </x-slot>
 
-    <div class="py-12">
+    <div class="py-12 student-book-catalog">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
             <!-- Search and Filters -->
             <div class="card mb-6">
@@ -55,7 +55,7 @@
 
                         <!-- Buttons -->
                         <div class="flex items-end space-x-2 lg:col-span-5">
-                            <button type="submit" class="inline-flex items-center px-4 py-2 bg-cyan-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-cyan-500">
+                            <button type="submit" class="inline-flex items-center px-4 py-2 bg-cyan-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-cyan-500 w-full md:w-auto min-h-[44px] text-sm md:text-base">
                                 Search
                             </button>
                             <a href="{{ route('student.book-catalog.index') }}" class="inline-flex items-center px-4 py-2 bg-slate-700 border border-transparent rounded-md font-semibold text-xs text-gray-100 uppercase tracking-widest hover:bg-slate-600">
@@ -114,7 +114,7 @@
                             </p>
                         @endif
 
-                        <div class="flex items-center justify-between">
+                        <div class="mt-4 space-y-3 border-t border-slate-700/60 pt-3">
                             @php
                                 $activeBorrows = \App\Models\BorrowRequest::where('book_id', $book->id)
                                     ->whereIn('status', ['active', 'overdue'])
@@ -122,7 +122,7 @@
                                 $availableCopies = $book->total_copies - $activeBorrows;
                             @endphp
 
-                            <div class="flex items-center">
+                            <div class="flex items-center justify-between gap-3">
                                 @if($availableCopies > 0)
                                     <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-600 text-gray-100">
                                         Available ({{ $availableCopies }})
@@ -132,35 +132,38 @@
                                         Unavailable
                                     </span>
                                 @endif
+
+                                <span class="text-xs text-slate-400">{{ $book->total_copies }} total</span>
                             </div>
 
                             @php $atWeeklyLimit = isset($weeklyBorrows, $tierLimit) && $weeklyBorrows >= $tierLimit; @endphp
-                            <div class="flex items-center gap-2">
+                            <div>
                                     @if($atWeeklyLimit)
-                                        <button type="button" disabled title="Reached weekly limit" class="inline-flex items-center px-3 py-1 bg-slate-700 border border-transparent rounded-md text-xs font-medium text-gray-300 cursor-not-allowed">
-                                        View Details
-                                    </button>
-                                @else
-                                    <a href="{{ route('student.book-catalog.show', $book) }}"
-                                       class="inline-flex items-center px-3 py-1 bg-gray-700 border border-transparent rounded-md text-xs font-medium text-gray-100 hover:bg-gray-600 view-details-link"
-                                       data-book-id="{{ $book->id }}">
-                                        View Details
-                                    </a>
-                                @endif
+                                            <button type="button" disabled title="Reached weekly limit" class="inline-flex items-center justify-center px-4 py-2.5 bg-slate-700 border border-transparent rounded-lg text-sm font-semibold text-gray-300 cursor-not-allowed w-full min-h-[44px]">
+                                            View Details
+                                        </button>
+                                    @else
+                                        <a href="{{ route('student.book-catalog.show', $book) }}"
+                                           class="inline-flex items-center justify-center px-4 py-2.5 bg-slate-600 border border-transparent rounded-lg text-sm font-semibold text-gray-100 hover:bg-slate-500 view-details-link w-full min-h-[44px]"
+                                           data-book-id="{{ $book->id }}">
+                                            View Details
+                                        </a>
+                                    @endif
+                            </div>
+
                                 {{-- Weekly usage badge and progress bar --}}
                                     @if(isset($weeklyBorrows, $tierLimit))
                                     @php $pct = $tierLimit ? min(100, intval(($weeklyBorrows / $tierLimit) * 100)) : 0; @endphp
-                                    <div class="ml-2 w-28">
+                                    <div class="w-full">
                                         <div class="flex items-center justify-between text-xs mb-1">
-                                            <span class="text-gray-300">{{ $weeklyBorrows }}/{{ $tierLimit }}</span>
-                                            <span class="text-gray-300">{{ $pct }}%</span>
+                                            <span class="text-gray-300" data-weekly-count="{{ $book->id }}">{{ $weeklyBorrows }}/{{ $tierLimit }}</span>
+                                            <span class="text-gray-300" data-weekly-percent="{{ $book->id }}">{{ $pct }}%</span>
                                         </div>
                                         <div class="w-full bg-slate-700/60 rounded h-2 overflow-hidden">
                                             <div class="bg-cyan-400 h-2" style="width: {{ $pct }}%" data-weekly-progress="{{ $book->id }}"></div>
                                         </div>
                                     </div>
                                 @endif
-                            </div>
                         </div>
                     </div>
                 </div>
@@ -209,15 +212,14 @@
                 document.querySelectorAll('[data-weekly-progress]').forEach(el => {
                     const pct = tierLimit ? Math.min(100, Math.floor((weeklyBorrows / tierLimit) * 100)) : 0;
                     el.style.width = pct + '%';
-                    // update nearby text if present
-                    const parent = el.closest('.w-28');
-                    if (parent) {
-                        const text = parent.querySelector('.flex.items-center.justify-between.text-xs');
-                        if (text) {
-                            // first child span contains X/Y
-                            text.querySelector('span') && (text.querySelector('span').textContent = weeklyBorrows + '/' + tierLimit);
-                        }
-                    }
+                });
+
+                document.querySelectorAll('[data-weekly-count]').forEach(el => {
+                    el.textContent = weeklyBorrows + '/' + tierLimit;
+                });
+                document.querySelectorAll('[data-weekly-percent]').forEach(el => {
+                    const pct = tierLimit ? Math.min(100, Math.floor((weeklyBorrows / tierLimit) * 100)) : 0;
+                    el.textContent = pct + '%';
                 });
 
                 // Enable/disable view details links (disable if either weekly or monthly limit reached)
@@ -256,13 +258,13 @@
                         const pct = tierLimit ? Math.min(100, Math.floor((weeklyBorrows / tierLimit) * 100)) : 0;
                         document.querySelectorAll('[data-weekly-progress]').forEach(el => {
                             el.style.width = pct + '%';
-                            const parent = el.closest('.w-28');
-                            if (parent) {
-                                const text = parent.querySelector('.flex.items-center.justify-between.text-xs');
-                                if (text && text.querySelector('span')) {
-                                    text.querySelector('span').textContent = weeklyBorrows + '/' + tierLimit;
-                                }
-                            }
+                        });
+
+                        document.querySelectorAll('[data-weekly-count]').forEach(el => {
+                            el.textContent = weeklyBorrows + '/' + tierLimit;
+                        });
+                        document.querySelectorAll('[data-weekly-percent]').forEach(el => {
+                            el.textContent = pct + '%';
                         });
 
                         const disableForLimit = e.atLimit || atMonthlyLimit;

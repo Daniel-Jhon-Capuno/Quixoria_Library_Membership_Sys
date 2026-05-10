@@ -41,6 +41,7 @@
             </div>
             <div class="card">
                 <div class="card-body p-0">
+                <div class="overflow-x-auto">
                 <table class="min-w-full divide-y divide-slate-700">
                     <thead class="bg-slate-800">
                         <tr>
@@ -77,6 +78,7 @@
                         @endforeach
                     </tbody>
                 </table>
+                </div>
             </div>
 
             <div class="mt-4">

@@ -29,7 +29,7 @@
                             <td class="py-3 px-4 text-sm text-gray-500">{{ $request->updated_at->format('M d, H:i') }}</td>
                             <td class="py-3 px-4 flex gap-2">
                                 <button onclick="openRejectReturnModal({{ $request->id }})" class="text-red-400 hover:text-red-500 transition text-sm font-medium px-3 py-1 bg-red-900/20 rounded-lg hover:bg-red-900/40">Reject Return</button>
-                                <form method="POST" action="{{ route('staff.borrow-requests.check-in', $request->id) }}" class="inline" onsubmit="return confirm('Mark as returned and check for reservations?')">
+                                <form method="POST" action="{{ route('staff.borrow-requests.check-in', $request->id) }}" class="inline" data-confirm="Mark as returned and check for reservations?">
                                     @csrf
                                     <button type="submit" class="text-green-400 hover:text-green-500 transition text-sm font-medium px-3 py-1 bg-green-900/20 rounded-lg hover:bg-green-900/40">Check In</button>
                                 </form>

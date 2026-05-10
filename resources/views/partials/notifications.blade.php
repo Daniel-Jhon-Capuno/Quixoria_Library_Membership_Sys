@@ -28,7 +28,7 @@
         </button>
 
         <!-- Notification Dropdown -->
-        <div x-show="showNotifications"
+            <div x-show="showNotifications"
              @click.away="showNotifications = false"
              x-transition:enter="transition ease-out duration-100"
              x-transition:enter-start="transform opacity-0 scale-95"
@@ -36,7 +36,7 @@
              x-transition:leave="transition ease-in duration-75"
              x-transition:leave-start="transform opacity-100 scale-100"
              x-transition:leave-end="transform opacity-0 scale-95"
-             class="absolute right-0 mt-2 w-96 bg-slate-800/95 backdrop-blur-xl rounded-2xl shadow-2xl ring-1 ring-slate-700/50 z-50 border border-slate-700">
+             class="fixed left-2 right-2 top-16 bg-slate-800/95 backdrop-blur-xl rounded-2xl shadow-2xl ring-1 ring-slate-700/50 z-50 border border-slate-700 sm:absolute sm:fixed-none sm:top-auto sm:left-auto sm:right-0 sm:mt-2 sm:w-96">
             
             <div class="px-6 py-4 border-b border-slate-700/50">
                 <div class="flex items-center justify-between">

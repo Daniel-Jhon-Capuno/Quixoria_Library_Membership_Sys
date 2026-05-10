@@ -22,6 +22,12 @@ class BorrowRequest extends Model
         'appeal_reason',
         'appeal_scheduled_at',
         'appeal_status',
+        'escalation_level',
+        'replacement_fee_cents',
+        'replacement_fee_paid',
+        'resolved_at',
+        'resolved_by',
+        'temporary_unblock_until',
     ];
 
     protected $casts = [
@@ -31,6 +37,9 @@ class BorrowRequest extends Model
         'appeal_scheduled_at' => 'datetime',
         'is_damaged' => 'boolean',
         'late_fee_waived' => 'boolean',
+        'replacement_fee_paid' => 'boolean',
+        'resolved_at' => 'datetime',
+        'temporary_unblock_until' => 'datetime',
     ];
 
     public function user()
@@ -51,5 +60,20 @@ class BorrowRequest extends Model
     public function handler()
     {
         return $this->belongsTo(User::class, 'handled_by');
+    }
+
+    public function resolver()
+    {
+        return $this->belongsTo(User::class, 'resolved_by');
+    }
+
+    public function escalationLogs()
+    {
+        return $this->hasMany(\App\Models\EscalationLog::class);
+    }
+
+    public function resolution()
+    {
+        return $this->hasOne(\App\Models\Resolution::class);
     }
 }

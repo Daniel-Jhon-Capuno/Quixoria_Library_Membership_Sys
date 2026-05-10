@@ -27,8 +27,8 @@ export default {
             },
             colors: {
                 // Brand colors
-                'primary': '#ec4899',
-                'primary-dark': '#be185d',
+                'primary': '#1e3a5f',
+                'primary-dark': '#0f2742',
                 'secondary': '#06b6d4',
                 'accent': '#3b82f6',
                 'success': '#10b981',

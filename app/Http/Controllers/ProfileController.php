@@ -34,6 +34,15 @@ class ProfileController extends Controller
 
         $request->user()->save();
 
+        // If the request expects JSON (AJAX), return the updated user data so
+        // frontend can update the UI without a full page reload.
+        if ($request->wantsJson() || $request->ajax()) {
+            return response()->json([
+                'status' => 'profile-updated',
+                'user' => $request->user()->only(['id', 'name', 'email']),
+            ]);
+        }
+
         return Redirect::route('profile.edit')->with('status', 'profile-updated');
     }
 

@@ -97,8 +97,8 @@
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                                         @if($request->status === 'pending')
-                                        <form method="POST" action="{{ route('student.borrow-requests.destroy', $request->id) }}" class="inline"
-                                              onsubmit="return confirm('Are you sure you want to cancel this borrow request?')">
+                                            <form method="POST" action="{{ route('student.borrow-requests.destroy', $request->id) }}" class="inline"
+                                                data-confirm="Are you sure you want to cancel this borrow request?">
                                             @csrf
                                             @method('DELETE')
                                             <button type="submit" class="text-red-400 hover:text-red-600">Cancel Request</button>

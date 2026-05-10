@@ -15,7 +15,7 @@ use Carbon\Carbon;
 
 class SubscriptionController extends Controller
 {
-public function index()
+    public function index()
     {
         $user = Auth::user();
         $currentSubscription = $user->subscription;
@@ -26,10 +26,18 @@ public function index()
 
         $tiers = MembershipTier::orderBy('priority_level')->get();
         $currentTierId = $currentSubscription?->membership_tier_id ?? null;
-        $daysRemaining = $currentSubscription ? round(Carbon::now()->diffInDays($currentSubscription->ends_at, false)) : null;
-        $renewalMessage = $daysRemaining !== null && $daysRemaining > 0
-            ? "Renews in {$daysRemaining} days"
-            : ($daysRemaining !== null ? "Expired " . abs($daysRemaining) . " days ago" : '');
+
+        if ($currentSubscription && $currentSubscription->ends_at) {
+            $daysRemaining = round(Carbon::now()->diffInDays($currentSubscription->ends_at, false));
+            $renewalMessage = $daysRemaining !== null && $daysRemaining > 0
+                ? "Renews in {$daysRemaining} days"
+                : ($daysRemaining !== null ? "Expired " . abs($daysRemaining) . " days ago" : '');
+        } else {
+            $daysRemaining = null;
+            $renewalMessage = ($currentSubscription && $currentSubscription->membershipTier && $currentSubscription->membershipTier->monthly_fee == 0)
+                ? 'Unlimited access (Basic)'
+                : '';
+        }
 
         return view('student.subscription.index', compact(
             'tiers',
@@ -41,7 +49,6 @@ public function index()
         ));
     }
 
-
     public function purchase(Request $request)
     {
         $request->validate([
@@ -49,13 +56,27 @@ public function index()
         ]);
 
         $user = Auth::user();
+        $tier = MembershipTier::findOrFail($request->tier_id);
 
-        // Check for existing active subscription
+        // If user currently has any subscription, remove it so the new purchase replaces it.
+        // Per business rule: prior subscription is removed and there is no refund.
         if ($user->subscription) {
-            return back()->withErrors(['error' => 'You already have an active subscription.']);
+            $user->subscription->delete();
         }
 
-        $tier = MembershipTier::findOrFail($request->tier_id);
+        // If the chosen tier is Basic (free), assign immediately with no payment
+        if ($tier->monthly_fee == 0) {
+            $subscription = Subscription::create([
+                'user_id' => $user->id,
+                'membership_tier_id' => $tier->id,
+                'status' => 'active',
+                'starts_at' => now(),
+                'ends_at' => null,
+                'amount_paid' => 0,
+            ]);
+            return redirect()->route('student.subscription.index')
+                ->with('success', 'You are now on the Basic (free) plan.');
+        }
 
         DB::transaction(function () use ($user, $tier, & $subscription) {
             // Create subscription in pending state for admin approval
@@ -87,8 +108,10 @@ public function index()
         $staffUsers = \App\Models\User::where('role', 'staff')->get();
         Notification::send($staffUsers, new \App\Notifications\AdminNewSubscriptionNotification($subscription));
 
+        // Warn user that switching removes prior subscription with no refund
         return redirect()->route('student.subscription.index')
-            ->with('success', 'Subscription request submitted for admin approval!');
+            ->with('success', 'Subscription request submitted for admin approval!')
+            ->with('warning', 'Note: Purchasing this tier replaces your previous subscription and no refund will be provided.');
     }
 
     public function upgrade(Request $request)
@@ -104,52 +127,50 @@ public function index()
             return back()->withErrors(['error' => 'You do not have an active subscription to upgrade.']);
         }
 
-        $currentTier = $currentSubscription->membershipTier;
         $newTier = MembershipTier::findOrFail($request->tier_id);
 
-        // Check if it's the next tier (by priority_level)
-        if ($newTier->priority_level !== $currentTier->priority_level + 1) {
-            return back()->withErrors(['error' => 'You can only upgrade to the next tier level.']);
-        }
-
         DB::transaction(function () use ($user, $currentSubscription, $newTier) {
-            // Cancel current subscription
-            $currentSubscription->update([
-                'status' => 'cancelled',
-                'cancelled_at' => now(),
-            ]);
+            // Remove current subscription (not kept as history per requirement)
+            $currentSubscription->delete();
 
-            // Create new subscription starting after current ends
-            $newSubscription = Subscription::create([
-                'user_id' => $user->id,
-                'membership_tier_id' => $newTier->id,
-                'status' => 'pending', // Will become active when current ends
-                'starts_at' => $currentSubscription->ends_at,
-                'ends_at' => $currentSubscription->ends_at->addMonth(),
-                'amount_paid' => $newTier->monthly_fee,
-            ]);
+            // If new tier is free (Basic) activate immediately
+            if ($newTier->monthly_fee == 0) {
+                $newSubscription = Subscription::create([
+                    'user_id' => $user->id,
+                    'membership_tier_id' => $newTier->id,
+                    'status' => 'active',
+                    'starts_at' => now(),
+                    'ends_at' => null,
+                    'amount_paid' => 0,
+                ]);
+            } else {
+                // Create new subscription effective immediately (pending admin confirmation)
+                $newSubscription = Subscription::create([
+                    'user_id' => $user->id,
+                    'membership_tier_id' => $newTier->id,
+                    'status' => 'pending',
+                    'starts_at' => now(),
+                    'ends_at' => now()->addMonth(),
+                    'amount_paid' => $newTier->monthly_fee,
+                ]);
 
-            // Create transaction record
-            Transaction::create([
-                'user_id' => $user->id,
-                'subscription_id' => $newSubscription->id,
-                'type' => 'payment',
-                'amount' => $newTier->monthly_fee,
-                'reference_note' => "Upgrade to {$newTier->name} tier",
-                'processed_by' => $user->id,
-            ]);
+                Transaction::create([
+                    'user_id' => $user->id,
+                    'subscription_id' => $newSubscription->id,
+                    'type' => 'payment',
+                    'amount' => $newTier->monthly_fee,
+                    'reference_note' => "Upgrade to {$newTier->name} tier",
+                    'processed_by' => $user->id,
+                ]);
+            }
         });
 
         return redirect()->route('student.subscription.index')
-            ->with('success', 'Subscription upgraded successfully! New tier will be active after current subscription ends.');
+            ->with('success', 'Subscription changed successfully. New tier will be applied.');
     }
 
     public function downgrade(Request $request)
     {
-        $request->validate([
-            'tier_id' => 'required|exists:membership_tiers,id',
-        ]);
-
         $user = Auth::user();
         $currentSubscription = $user->subscription;
 
@@ -157,38 +178,46 @@ public function index()
             return back()->withErrors(['error' => 'You do not have an active subscription to downgrade.']);
         }
 
-        $currentTier = $currentSubscription->membershipTier;
         $newTier = MembershipTier::findOrFail($request->tier_id);
 
-        // Check if it's a lower tier
-        if ($newTier->priority_level >= $currentTier->priority_level) {
-            return back()->withErrors(['error' => 'You can only downgrade to a lower tier.']);
-        }
-
         DB::transaction(function () use ($user, $currentSubscription, $newTier) {
-            // Create new subscription starting next billing cycle
-            $newSubscription = Subscription::create([
-                'user_id' => $user->id,
-                'membership_tier_id' => $newTier->id,
-                'status' => 'pending', // Will become active next cycle
-                'starts_at' => $currentSubscription->ends_at,
-                'ends_at' => $currentSubscription->ends_at->addMonth(),
-                'amount_paid' => $newTier->monthly_fee,
-            ]);
+            // Remove current subscription immediately
+            $currentSubscription->delete();
 
-            // Create transaction record
-            Transaction::create([
-                'user_id' => $user->id,
-                'subscription_id' => $newSubscription->id,
-                'type' => 'payment',
-                'amount' => $newTier->monthly_fee,
-                'reference_note' => "Downgrade to {$newTier->name} tier",
-                'processed_by' => $user->id,
-            ]);
+            // If new tier is Basic (free), create active perpetual subscription
+            if ($newTier->monthly_fee == 0) {
+                $newSubscription = Subscription::create([
+                    'user_id' => $user->id,
+                    'membership_tier_id' => $newTier->id,
+                    'status' => 'active',
+                    'starts_at' => now(),
+                    'ends_at' => null,
+                    'amount_paid' => 0,
+                ]);
+            } else {
+                // Create paid subscription effective immediately (pending admin confirmation)
+                $newSubscription = Subscription::create([
+                    'user_id' => $user->id,
+                    'membership_tier_id' => $newTier->id,
+                    'status' => 'pending',
+                    'starts_at' => now(),
+                    'ends_at' => now()->addMonth(),
+                    'amount_paid' => $newTier->monthly_fee,
+                ]);
+
+                Transaction::create([
+                    'user_id' => $user->id,
+                    'subscription_id' => $newSubscription->id,
+                    'type' => 'payment',
+                    'amount' => $newTier->monthly_fee,
+                    'reference_note' => "Downgrade to {$newTier->name} tier",
+                    'processed_by' => $user->id,
+                ]);
+            }
         });
 
         return redirect()->route('student.subscription.index')
-            ->with('success', 'Subscription downgraded successfully! New tier will be active next billing cycle.');
+            ->with('success', 'Subscription changed successfully. New tier will be applied.');
     }
 
     public function cancel()
@@ -205,7 +234,9 @@ public function index()
             'cancelled_at' => now(),
         ]);
 
+        $expiryText = $currentSubscription->ends_at ? $currentSubscription->ends_at->format('M j, Y') : 'no expiration';
+
         return redirect()->route('student.subscription.index')
-            ->with('success', 'Subscription cancelled successfully! You will retain access until ' . $currentSubscription->ends_at->format('M j, Y') . '.');
+            ->with('success', 'Subscription cancelled successfully! You will retain access until ' . $expiryText . '.');
     }
 }

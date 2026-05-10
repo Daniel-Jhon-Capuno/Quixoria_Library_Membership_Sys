@@ -1,6 +1,6 @@
 @props(['title', 'value', 'subtitle' => null, 'icon' => null, 'color' => 'primary', 'trend' => null])
 
-<div class="rounded-xl p-6 shadow-card hover:shadow-glow transition"
+<div {{ $attributes->merge(['class' => 'stat-card rounded-xl p-6 shadow-card hover:shadow-glow transition w-full']) }}
      style="background-color: rgb(var(--surface-primary)); border: 1px solid rgb(var(--border-primary));">
     <div class="flex items-start justify-between mb-4">
         <div>

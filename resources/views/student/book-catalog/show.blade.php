@@ -3,7 +3,7 @@
         <h2 class="font-semibold text-xl text-gray-100 leading-tight">{{ $book->title }}</h2>
     </x-slot>
 
-    <div class="py-12">
+    <div class="py-12 student-book-show">
         @if(auth()->check())
             <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 mb-4">
                 @if(auth()->user()->subscription)
@@ -11,7 +11,12 @@
                         <div class="mb-4 p-4 bg-slate-800 border border-slate-700 text-red-200 rounded-md">You have reached your monthly borrow limit of {{ $monthlyLimit }} books.</div>
                     @endif
                     <div class="bg-slate-800 border-l-4 border-slate-700 p-3 text-sm text-gray-200 rounded">
-                        You have an active subscription until {{ auth()->user()->subscription->ends_at->format('M j, Y') }}.
+                        @php $sub = auth()->user()->subscription; @endphp
+                        @if($sub && $sub->ends_at)
+                            You have an active subscription until {{ $sub->ends_at->format('M j, Y') }}.
+                        @elseif($sub && !$sub->ends_at)
+                            You have an active Basic (free) subscription — unlimited access.
+                        @endif
                     </div>
                 @else
                     <div class="bg-slate-800 border-l-4 border-slate-700 p-3 text-sm text-gray-200 rounded">
@@ -63,6 +68,10 @@
                             <div class="space-y-3">
                                 @php
                                     $atWeeklyLimit = isset($weeklyBorrows, $tierLimit) && $weeklyBorrows >= $tierLimit;
+                                    $hasActiveBorrow = \App\Models\BorrowRequest::where('book_id', $book->id)
+                                        ->where('user_id', auth()->id())
+                                        ->whereIn('status', ['active', 'overdue'])
+                                        ->exists();
                                 @endphp
 
                                 @if($atWeeklyLimit)
@@ -71,7 +80,11 @@
                                     </div>
                                 @endif
 
-                                @if($hasActiveRequest)
+                                @if($hasActiveBorrow)
+                                    <a href="{{ route('student.active-borrows.index') }}" class="w-full px-4 py-3 bg-gradient-to-r from-emerald-700 to-emerald-800 hover:from-emerald-600 hover:to-emerald-700 border border-emerald-600 rounded-lg text-sm font-bold text-emerald-100 text-center cursor-pointer transition-all inline-flex justify-center items-center">
+                                        📚 Already in My Borrows
+                                    </a>
+                                @elseif($hasActiveRequest)
                                     <div class="w-full px-4 py-2 bg-slate-700 border border-transparent rounded-md text-sm font-medium text-gray-300 text-center cursor-not-allowed">
                                         Request Already Exists
                                     </div>
@@ -190,7 +203,12 @@
                                         <div class="mb-4 p-3 rounded-md bg-slate-800 text-sm text-gray-200">
                                             <strong>Subscription:</strong>
                                             @if(auth()->user()->subscription)
-                                                {{ ucfirst(auth()->user()->subscription->status) }} — valid until {{ auth()->user()->subscription->ends_at->format('M j, Y') }}
+                                                @php $sub = auth()->user()->subscription; @endphp
+                                                @if($sub && $sub->ends_at)
+                                                    {{ ucfirst($sub->status) }} — valid until {{ $sub->ends_at->format('M j, Y') }}
+                                                @elseif($sub && !$sub->ends_at)
+                                                    {{ ucfirst($sub->status) }} — Basic (unlimited)
+                                                @endif
                                                 <a href="{{ route('student.subscription.index') }}" class="ml-2 text-blue-600">Manage</a>
                                                 @if(auth()->check() && auth()->user()->role === 'admin')
                                                     <form method="POST" action="{{ route('admin.subscriptions.quick-fix', auth()->user()->id) }}" class="inline-block ml-3">

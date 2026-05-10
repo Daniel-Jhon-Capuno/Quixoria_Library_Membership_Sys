@@ -1,9 +1,6 @@
 <x-app-layout>
     <x-slot name="header">
-        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-            <h2 class="font-semibold text-xl leading-tight text-gray-100">Books</h2>
-            <a href="{{ route('admin.books.create') }}" class="inline-flex items-center px-4 py-2 rounded-md bg-gray-700 text-gray-100 hover:bg-gray-600 transition">Add Book</a>
-        </div>
+        <h2 class="font-semibold text-xl leading-tight text-gray-100">Books</h2>
     </x-slot>
 
     <div class="py-12">
@@ -12,7 +9,18 @@
                 <div class="mb-4 p-4 rounded-md border border-slate-700 bg-slate-800 text-green-200">{{ session('success') }}</div>
             @endif
 
+            <!-- Add Book Button -->
+            <div class="mb-6 flex justify-end">
+                <a href="{{ route('admin.books.create') }}" class="inline-flex items-center px-6 py-3 bg-gray-700 hover:bg-gray-600 text-gray-100 rounded-lg font-medium transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-1">
+                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                    </svg>
+                    Add New Book
+                </a>
+            </div>
+
             <div class="shadow-sm rounded-lg overflow-hidden bg-slate-800 border border-slate-700">
+                <div class="overflow-x-auto">
                 <table class="min-w-full divide-y divide-slate-700">
                     <thead class="bg-slate-800">
                         <tr>
@@ -38,12 +46,12 @@
                                 </td>
                                 <td class="px-4 py-4 whitespace-nowrap text-right text-sm font-medium space-x-2">
                                     <a href="{{ route('admin.books.edit', $book) }}" class="hover:opacity-80 transition text-gray-100">Edit</a>
-                                    <form action="{{ route('admin.books.archive', $book) }}" method="POST" class="inline-block" onsubmit="return confirm('{{ $book->is_archived ? 'Unarchive' : 'Archive' }} this book?');">
+                                    <form action="{{ route('admin.books.archive', $book) }}" method="POST" class="inline-block" data-confirm="{{ $book->is_archived ? 'Unarchive this book?' : 'Archive this book?' }}">
                                         @csrf
                                         @method('PATCH')
                                         <button type="submit" class="hover:opacity-80 transition text-yellow-400">{{ $book->is_archived ? 'Unarchive' : 'Archive' }}</button>
                                     </form>
-                                    <form action="{{ route('admin.books.destroy', $book) }}" method="POST" class="inline-block" onsubmit="return confirm('Delete this book?');">
+                                    <form action="{{ route('admin.books.destroy', $book) }}" method="POST" class="inline-block" data-confirm="Delete this book?">
                                         @csrf
                                         @method('DELETE')
                                         <button type="submit" class="hover:opacity-80 transition text-red-400">Delete</button>
@@ -53,6 +61,7 @@
                         @endforeach
                     </tbody>
                 </table>
+                </div>
             </div>
         </div>
     </div>

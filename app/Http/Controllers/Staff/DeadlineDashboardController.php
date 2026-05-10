@@ -64,8 +64,8 @@ class DeadlineDashboardController extends Controller
             return back()->with('error', 'A reminder was already sent to this student in the last 24 hours.');
         }
 
-        // Send the notification
-        $borrowRequest->student->notify(new DeadlineReminderNotification($borrowRequest));
+        // Send the notification synchronously (avoid requiring a queue worker)
+        $borrowRequest->student->notifyNow(new DeadlineReminderNotification($borrowRequest));
 
         return back()->with('success', 'Deadline reminder sent to student.');
     }

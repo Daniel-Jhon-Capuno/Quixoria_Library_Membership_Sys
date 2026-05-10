@@ -2,21 +2,21 @@
 
 <div x-data="{ profileOpen: false, sidebarCollapsed: false, toggleSidebar() { this.sidebarCollapsed = !this.sidebarCollapsed; localStorage.setItem('sidebarCollapsed', this.sidebarCollapsed); try { fetch('{{ route('user.preferences.sidebar-collapsed') }}', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' }, body: JSON.stringify({ sidebar_collapsed: this.sidebarCollapsed }) }); } catch(e){} }, }"
     x-init="sidebarCollapsed = (localStorage.getItem('sidebarCollapsed') !== null ? (localStorage.getItem('sidebarCollapsed') === 'true') : {{ json_encode(auth()->user()->sidebar_collapsed ?? false) }})"
-    x-bind:class="sidebarCollapsed ? 'fixed left-0 top-0 h-screen w-20 shadow-xl z-50 sidebar collapsed transition-all duration-300' : 'fixed left-0 top-0 h-screen w-56 shadow-xl z-50 sidebar transition-all duration-300'" 
-     style="background: linear-gradient(to bottom, rgb(20, 45, 70), rgb(10, 20, 35)); overflow-y: auto;" 
+    x-bind:class="(sidebarCollapsed && window.innerWidth >= 1024) ? 'h-screen w-24 shadow-xl z-50 sidebar collapsed transition-all duration-300' : 'h-screen w-64 shadow-xl z-50 sidebar transition-all duration-300'" 
+     style="background: rgb(var(--surface-primary)); overflow-y: auto;" 
      x-cloak
      @mouseenter="if(window.innerWidth >= 1024) sidebarCollapsed = false"
      @mouseleave="if(window.innerWidth >= 1024) sidebarCollapsed = true">
     
         <div class="px-4 py-6 border-b flex items-center cursor-pointer group" 
             style="border-color: rgba(40, 100, 150, 0.3);" 
-            @click="toggleSidebar(); window.dispatchEvent(new CustomEvent('sidebar-toggled', { detail: sidebarCollapsed }))">
+            @click="if(window.innerWidth >= 1024) { toggleSidebar(); window.dispatchEvent(new CustomEvent('sidebar-toggled', { detail: sidebarCollapsed })); }">
         
-        <div class="flex items-center gap-3 overflow-hidden flex-shrink-0">
-            <!-- Logo - Always left-aligned -->
-<div class="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 bg-gradient-to-br from-purple-mesh/20 to-teal-glow/20 border border-purple-mesh/30">
-                <img src="/images/logo.png" alt="Quixoria" class="w-6 h-6 object-contain rounded">
-            </div>
+                <div class="flex items-center gap-3 overflow-hidden flex-shrink-0">
+                    <!-- Logo - Always left-aligned -->
+                    <div class="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 border border-slate-600/30" style="background-color: rgb(var(--surface-primary));">
+                        <img src="/images/logo.png" alt="Quixoria" class="w-6 h-6 object-contain rounded">
+                    </div>
             
             <!-- Text - Right side, only on expanded -->
             <div x-show="!sidebarCollapsed" x-transition.opacity class="flex flex-col min-w-0">
@@ -34,7 +34,7 @@
         }
     </style>
 
-    <nav class="px-2 py-6 space-y-2 flex-1">
+    <nav class="px-2 md:px-4 py-6 space-y-2 flex-1">
         @php $role = auth()->user()->role; @endphp
 
         @if($role === 'admin')
@@ -46,7 +46,7 @@
                 $pendingSubsCount = \App\Models\Subscription::where('status', 'pending')->count();
                 $isSubsActive = request()->routeIs('admin.subscriptions.*');
             @endphp
-            <a href="{{ url('admin/subscriptions') }}" class="{{ $isSubsActive ? 'bg-slate-700/80 text-white border-l-2 border-cyan-400' : 'text-slate-300 hover:text-white' }} flex items-center gap-3 p-3 rounded-xl transition-all duration-200 hover:bg-slate-800/50 group relative overflow-hidden">
+            <a href="{{ url('admin/subscriptions') }}" class="{{ $isSubsActive ? 'bg-slate-700/80 text-white border-l-2 border-cyan-400' : 'text-slate-300 hover:text-white' }} flex items-center gap-3 p-3 md:px-4 md:py-3 rounded-xl transition-all duration-200 hover:bg-slate-800/50 group relative overflow-hidden">
                 <svg class="w-5 h-5 flex-shrink-0 opacity-75 group-hover:opacity-100 transition-opacity" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h18v13a2 2 0 01-2 2H5a2 2 0 01-2-2V3z"></path>
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10"></path>
@@ -61,6 +61,23 @@
             </a>
             {{-- Payments management link --}}
             <x-sidebar-link href="{{ route('admin.payments.index') }}" icon="credit-card" label="Payment Management" />
+            {{-- Escalation Cases Management --}}
+            @php
+                $escalationCount = \App\Models\BorrowRequest::whereIn('status', ['lost', 'severely_overdue', 'unresolved', 'presumed_lost'])->count();
+                $isEscalationActive = request()->routeIs('admin.escalations.*');
+            @endphp
+            <a href="{{ route('admin.escalations.index') }}" class="{{ $isEscalationActive ? 'bg-slate-700/80 text-white border-l-2 border-cyan-400' : 'text-slate-300 hover:text-white' }} flex items-center gap-3 p-3 md:px-4 md:py-3 rounded-xl transition-all duration-200 hover:bg-slate-800/50 group relative overflow-hidden">
+                <svg class="w-5 h-5 flex-shrink-0 opacity-75 group-hover:opacity-100 transition-opacity" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4v2m0 4v2M6 7a3 3 0 110 6 3 3 0 010-6zm0 8a3 3 0 110 6 3 3 0 010-6zm12-8a3 3 0 110 6 3 3 0 010-6zm0 8a3 3 0 110 6 3 3 0 010-6z"></path>
+                </svg>
+                <span x-show="!sidebarCollapsed" x-transition.opacity class="font-medium flex-1 whitespace-nowrap transition-colors">Escalations</span>
+                {{-- Badge showing number of open cases --}}
+                @if($escalationCount)
+                    <span class="absolute top-3 right-3 inline-flex items-center justify-center w-4 h-4 rounded-full bg-red-600 text-white text-[10px] font-semibold">{{ $escalationCount > 9 ? '9+' : $escalationCount }}</span>
+                @else
+                    <span class="hidden"></span>
+                @endif
+            </a>
             {{-- Pending submenu removed; use Subscriptions page to view pending items. --}}
             <x-sidebar-link href="{{ route('admin.reports.index') }}" icon="document-chart-bar" label="Reports" />
 @elseif($role === 'staff')
@@ -79,8 +96,8 @@
 
     <div class="px-3 py-4 border-t" style="border-color: rgba(40, 100, 150, 0.3);">
         <button @click="profileOpen = !profileOpen" 
-                @click.outside="profileOpen = false"
-                class="w-full flex items-center gap-3 p-2 rounded-lg transition hover:bg-slate-800/50" 
+            @click.outside="profileOpen = false"
+            class="w-full flex items-center gap-3 p-2 md:px-3 md:py-2 rounded-lg transition hover:bg-slate-800/50" 
                 :class="sidebarCollapsed ? 'justify-center p-2' : ''"
                 style="background: rgba(100, 200, 255, 0.06); border: 1px solid rgba(100, 200, 255, 0.02);">
             

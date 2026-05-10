@@ -37,8 +37,17 @@ Route::get('/landing', function () {
 })->name('landing');
 
 Route::get('/dashboard', function () {
-    return view('dashboard');
-})->middleware(['auth', 'verified'])->name('dashboard');
+    if (!auth()->check()) {
+        return redirect()->route('login');
+    }
+
+    return match (auth()->user()->role) {
+        'admin' => redirect()->route('admin.dashboard.index'),
+        'staff' => redirect()->route('staff.dashboard.index'),
+        'student' => redirect()->route('student.dashboard.index'),
+        default => redirect()->route('landing'),
+    };
+})->middleware(['auth'])->name('dashboard');
 
 Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard.index');
@@ -46,6 +55,7 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::resource('users', UserController::class);
     Route::post('users/{user}/reset-password', [UserController::class, 'resetPassword'])
         ->name('users.reset-password');
+    Route::post('users/{user}/unrestrict', [UserController::class, 'unrestrict'])->name('users.unrestrict');
     Route::resource('books', BookController::class);
     Route::patch('books/{book}/archive', [BookController::class, 'archive'])
         ->name('books.archive');
@@ -82,6 +92,17 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::get('payments/{id}', [\App\Http\Controllers\Admin\PaymentController::class, 'show'])->name('payments.show');
     Route::post('payments/{id}/confirm', [\App\Http\Controllers\Admin\PaymentController::class, 'confirm'])->name('payments.confirm');
     Route::post('payments/{id}/reject', [\App\Http\Controllers\Admin\PaymentController::class, 'reject'])->name('payments.reject');
+    // Escalation management for admins
+    Route::get('escalations', [\App\Http\Controllers\Admin\EscalationController::class, 'index'])->name('escalations.index');
+    Route::get('escalations/{borrowRequestId}', [\App\Http\Controllers\Admin\EscalationController::class, 'show'])->name('escalations.show');
+    Route::post('escalations/{borrowRequestId}/resolve', [\App\Http\Controllers\Admin\EscalationController::class, 'resolve'])->name('escalations.resolve');
+    Route::post('escalations/{borrowRequestId}/temporary-unblock', [\App\Http\Controllers\Admin\EscalationController::class, 'temporaryUnblock'])->name('escalations.temporary-unblock');
+    Route::post('escalations/{borrowRequestId}/reset', [\App\Http\Controllers\Admin\EscalationController::class, 'resetEscalation'])->name('escalations.reset');
+    Route::post('escalations/user/{userId}/ban', [\App\Http\Controllers\Admin\EscalationController::class, 'permanentBan'])->name('escalations.ban');
+    // Resolution management for admins
+    Route::post('resolutions', [\App\Http\Controllers\Admin\ResolutionController::class, 'store'])->name('resolutions.store');
+    Route::get('resolutions/{resolutionId}', [\App\Http\Controllers\Admin\ResolutionController::class, 'receipt'])->name('resolutions.receipt');
+    Route::get('resolutions/{resolutionId}/download', [\App\Http\Controllers\Admin\ResolutionController::class, 'downloadReceipt'])->name('resolutions.download');
 });
 
 Route::middleware(['auth', 'role:staff'])->prefix('staff')->name('staff.')->group(function () {
@@ -116,8 +137,11 @@ Route::middleware(['auth', 'role:student'])->prefix('student')->name('student.')
     Route::get('active-borrows', [ActiveBorrowController::class, 'index'])->name('active-borrows.index');
     Route::post('active-borrows/{id}/renew', [ActiveBorrowController::class, 'renew'])->name('active-borrows.renew');
     Route::post('active-borrows/{id}/return-request', [ActiveBorrowController::class, 'returnRequest'])->name('active-borrows.return-request');
-Route::post('active-borrows/{id}/appeal', [\App\Http\Controllers\Student\AppealController::class, 'store'])->name('active-borrows.appeal');
-Route::post('active-borrows/{id}/reschedule', [\App\Http\Controllers\Student\AppealController::class, 'reschedule'])->name('active-borrows.reschedule');
+    Route::post('active-borrows/{id}/appeal', [\App\Http\Controllers\Student\AppealController::class, 'store'])->name('active-borrows.appeal');
+    Route::post('active-borrows/{id}/reschedule', [\App\Http\Controllers\Student\AppealController::class, 'reschedule'])->name('active-borrows.reschedule');
+    // Lost book reporting
+    Route::get('active-borrows/{borrowRequestId}/lost/confirm', [\App\Http\Controllers\Student\LostBookController::class, 'confirm'])->name('active-borrows.lost-confirm');
+    Route::post('active-borrows/{borrowRequestId}/lost', [\App\Http\Controllers\Student\LostBookController::class, 'report'])->name('active-borrows.lost-report');
     Route::get('subscription', [StudentSubscriptionController::class, 'index'])->name('subscription.index');
     Route::post('subscription/purchase', [StudentSubscriptionController::class, 'purchase'])->name('subscription.purchase');
     Route::post('subscription/upgrade', [StudentSubscriptionController::class, 'upgrade'])->name('subscription.upgrade');

@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Models\MembershipTier;
+use App\Models\Subscription;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -40,12 +42,28 @@ class RegisteredUserController extends Controller
             'name' => $request->name,
             'email' => $request->email,
             'password' => Hash::make($request->password),
+            'role' => 'student', // Default role
         ]);
+
+        // Auto-assign basic tier subscription for students
+        if ($user->role === 'student') {
+            $basicTier = MembershipTier::where('name', 'Basic')->first();
+            if ($basicTier) {
+                Subscription::create([
+                    'user_id' => $user->id,
+                    'membership_tier_id' => $basicTier->id,
+                    'status' => 'active',
+                    'starts_at' => now(),
+                    'ends_at' => null,
+                    'amount_paid' => 0,
+                ]);
+            }
+        }
 
         event(new Registered($user));
 
         Auth::login($user);
 
-        return redirect(route('dashboard', absolute: false));
+        return redirect(route('student.dashboard.index', absolute: false));
     }
 }

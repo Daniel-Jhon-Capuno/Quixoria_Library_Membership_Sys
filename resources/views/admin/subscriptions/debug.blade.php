@@ -24,6 +24,7 @@
 
     <div class="mt-4 bg-white shadow rounded p-4">
         <h3 class="font-medium">All subscriptions (newest first)</h3>
+        <div class="overflow-x-auto">
         <table class="w-full mt-2 table-auto">
             <thead>
                 <tr>
@@ -48,6 +49,7 @@
                 @endforeach
             </tbody>
         </table>
+        </div>
     </div>
 
     <div class="mt-4 bg-white shadow rounded p-4">

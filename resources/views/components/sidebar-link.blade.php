@@ -6,7 +6,7 @@
         : request()->url() === $href;
 @endphp
 
-<a href="{{ $href }}" class="{{ $isActive ? 'bg-slate-700/80 text-white border-l-2 border-cyan-400' : 'text-slate-300 hover:text-white' }} flex items-center gap-3 p-3 rounded-xl transition-all duration-200 hover:bg-slate-800/50 group relative overflow-hidden">
+<a href="{{ $href }}" class="{{ $isActive ? 'bg-slate-700/80 text-white border-l-2 border-cyan-400' : 'text-slate-300 hover:text-white' }} flex items-center gap-3 p-3 md:px-4 md:py-3 rounded-xl transition-all duration-200 hover:bg-slate-800/50 group relative overflow-hidden">
     @if($icon)
         <svg class="w-5 h-5 flex-shrink-0 opacity-75 group-hover:opacity-100 transition-opacity" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             @switch($icon)
@@ -40,6 +40,6 @@
         </svg>
     @endif
 
-    {{-- Hide label when sidebar is collapsed --}}
-    <span x-show="!sidebarCollapsed" x-transition.opacity class="font-medium flex-1 whitespace-nowrap transition-colors">{{ $label }}</span>
+    {{-- Show label when expanded or on mobile --}}
+    <span x-show="!sidebarCollapsed || window.innerWidth < 1024" x-transition.opacity class="font-medium flex-1 whitespace-nowrap transition-colors text-sm md:text-base">{{ $label }}</span>
 </a>

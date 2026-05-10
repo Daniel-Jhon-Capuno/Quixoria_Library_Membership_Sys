@@ -26,7 +26,7 @@
                     </span>
                 </div>
 
-                <div class="grid grid-cols-2 gap-6 mb-8">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
                     <div>
                         <div class="text-xs text-slate-500 uppercase mb-1">Student</div>
                         <div class="text-white font-semibold">{{ $payment->user->name }}</div>
@@ -67,8 +67,8 @@
                 <div class="mb-8">
                     <div class="text-xs text-slate-500 uppercase mb-3">Proof of Payment</div>
                     <img src="{{ asset('storage/' . $payment->proof_of_payment) }}"
-                         alt="Proof of Payment"
-                         class="max-w-full rounded-xl border border-slate-700 shadow-lg">
+                        alt="Proof of Payment"
+                        class="w-full h-auto object-cover rounded-xl border border-slate-700 shadow-lg">
                 </div>
                 @endif
 
@@ -80,18 +80,18 @@
                 @endif
 
                 @if($payment->status === 'pending')
-                <div class="flex gap-4 mt-6">
+                <div class="flex flex-col md:flex-row gap-4 mt-6">
                     <form method="POST" action="{{ route('admin.payments.confirm', $payment->id) }}" class="flex-1">
                         @csrf
                         <button type="submit" onclick="return confirm('Confirm this payment and activate the subscription?')"
-                            class="w-full px-6 py-4 bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white font-bold rounded-2xl transition-all">
+                            class="w-full md:flex-1 px-6 py-4 bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white font-bold rounded-2xl transition-all min-h-[44px] text-sm md:text-base">
                             ✅ Confirm Payment
                         </button>
                     </form>
 
                     <div class="flex-1">
                         <button type="button" onclick="document.getElementById('rejectForm').classList.toggle('hidden')"
-                            class="w-full px-6 py-4 bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white font-bold rounded-2xl transition-all">
+                            class="w-full md:flex-1 px-6 py-4 bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white font-bold rounded-2xl transition-all min-h-[44px] text-sm md:text-base">
                             ❌ Reject Payment
                         </button>
                         <form id="rejectForm" method="POST" action="{{ route('admin.payments.reject', $payment->id) }}" class="hidden mt-3 space-y-3">

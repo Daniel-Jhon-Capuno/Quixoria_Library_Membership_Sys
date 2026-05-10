@@ -17,6 +17,7 @@
 
             <div class="card">
                 <div class="card-body p-0">
+                <div class="overflow-x-auto">
                 <table class="min-w-full divide-y divide-slate-700">
                     <thead class="bg-slate-800">
                         <tr>
@@ -40,7 +41,7 @@
                                 <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-100">{{ $tier->priority_level }}</td>
                                 <td class="px-4 py-4 whitespace-nowrap text-right text-sm font-medium space-x-2">
                                     <a href="{{ route('admin.tiers.edit', $tier) }}" class="text-gray-100 hover:text-gray-300">Edit</a>
-                                    <form action="{{ route('admin.tiers.destroy', $tier) }}" method="POST" class="inline-block" onsubmit="return confirm('Delete this tier?');">
+                                    <form action="{{ route('admin.tiers.destroy', $tier) }}" method="POST" class="inline-block" data-confirm="Delete this tier?">
                                         @csrf
                                         @method('DELETE')
                                         <button type="submit" class="text-red-400 hover:text-red-600">Delete</button>
@@ -50,6 +51,7 @@
                         @endforeach
                     </tbody>
                 </table>
+                </div>
             </div>
         </div>
     </div>
