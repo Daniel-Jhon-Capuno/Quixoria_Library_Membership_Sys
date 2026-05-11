@@ -163,6 +163,18 @@
 
     <script>
         function openConfirmModal() {
+            const form = document.getElementById('paymentForm');
+            if (!form) {
+                alert('Form not found');
+                return;
+            }
+            
+            // Validate form
+            if (!form.checkValidity()) {
+                form.reportValidity();
+                return;
+            }
+
             const modal = document.getElementById('confirmModal');
             if (modal) {
                 modal.style.display = 'flex';
@@ -177,41 +189,30 @@
         }
         
         function submitPaymentForm(btn) {
-            try {
-                const form = document.getElementById('paymentForm');
-                
-                if (!form) {
-                    console.error('Form with id paymentForm not found');
-                    alert('Form not found. Please refresh the page.');
-                    return false;
-                }
-
-                // Disable button to prevent double submission
-                btn.disabled = true;
-                btn.innerHTML = 'Processing... ⏳';
-                btn.classList.add('opacity-80');
-                
-                // Submit the form directly
-                console.log('Submitting form to:', form.action);
-                form.submit();
-                
-                return false;
-                
-            } catch (e) {
-                console.error('Form submission error:', e);
-                alert('Error: ' + e.message);
-                btn.disabled = false;
-                btn.innerHTML = 'Confirm Payment';
-                btn.classList.remove('opacity-80');
-                return false;
+            const form = document.getElementById('paymentForm');
+            
+            if (!form) {
+                alert('Error: Form not found');
+                return;
             }
+
+            // Final validation before submit
+            if (!form.checkValidity()) {
+                form.reportValidity();
+                return;
+            }
+
+            // Prevent double submission
+            btn.disabled = true;
+            btn.innerHTML = 'Processing... ⏳';
+            
+            // Submit form directly
+            form.submit();
         }
 
         // Close modal with Escape key
-        document.addEventListener('keydown', function(event) {
-            if (event.key === 'Escape') {
-                closeConfirmModal();
-            }
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') closeConfirmModal();
         });
     </script>
 </x-app-layout>
