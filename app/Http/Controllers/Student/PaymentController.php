@@ -10,6 +10,7 @@ use App\Notifications\PaymentSubmittedNotification;
 use App\Notifications\UpgradeRefundNotification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 
 class PaymentController extends Controller
@@ -78,8 +79,8 @@ class PaymentController extends Controller
                 'membership_tier_id' => $tier->id,
                 'status' => 'pending',
                 'amount_paid' => $tier->monthly_fee,
-                'starts_at' => null,
-                'ends_at' => null,
+                'starts_at' => now(),
+                'ends_at' => now()->addMonth(),
             ]);
 
             $payment->update(['subscription_id' => $subscription->id]);
@@ -91,13 +92,22 @@ class PaymentController extends Controller
             ]);
         }
 
-        // Notify admins
-        $admins = \App\Models\User::where('role', 'admin')->get();
-        \Illuminate\Support\Facades\Notification::send($admins, new PaymentSubmittedNotification($payment));
+        // Notify admins and student, but never let notification failure break purchase flow.
+        try {
+            $admins = \App\Models\User::where('role', 'admin')->get();
+            if ($admins->isNotEmpty()) {
+                \Illuminate\Support\Facades\Notification::send($admins, new PaymentSubmittedNotification($payment));
+            }
 
-        // Notify student about refund if upgrading
-        if ($isUpgrade) {
-            $user->notifyNow(new UpgradeRefundNotification($payment, $oldTierName));
+            if ($isUpgrade) {
+                $user->notifyNow(new UpgradeRefundNotification($payment, $oldTierName));
+            }
+        } catch (\Throwable $e) {
+            Log::warning('Subscription payment notification failed', [
+                'payment_id' => $payment->id,
+                'user_id' => $user->id,
+                'error' => $e->getMessage(),
+            ]);
         }
 
         return redirect()->route('student.payment.receipt', $payment->id)
