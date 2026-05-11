@@ -8,7 +8,7 @@
 
             @if($isUpgrade)
             <div class="bg-yellow-800/40 border border-yellow-600/50 rounded-2xl p-4 mb-6 text-yellow-300">
-                ⚠️ You are upgrading from <strong>{{ $currentSubscription->membershipTier->name }}</strong> to <strong>{{ $tier->name }}</strong>. Your current subscription will be cancelled and you will need to visit the branch to claim your refund.
+                ⚠️ You are upgrading from <strong>{{ data_get($currentSubscription, 'membershipTier.name', 'your current plan') }}</strong> to <strong>{{ $tier->name }}</strong>. Your current subscription will be cancelled and you will need to visit the branch to claim your refund.
             </div>
             @endif
 
