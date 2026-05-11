@@ -140,11 +140,17 @@ class PaymentController extends Controller
                 'tier_id' => $tierId,
                 'user_id' => Auth::id(),
                 'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
             ]);
+
+            // Show actual error in development, generic error in production
+            $errorMessage = config('app.debug') 
+                ? 'Payment error: ' . $e->getMessage()
+                : 'We could not process your payment request right now. Please try again.';
 
             return back()
                 ->withInput()
-                ->withErrors(['error' => 'We could not process your payment request right now. Please try again.']);
+                ->withErrors(['error' => $errorMessage]);
         }
     }
 
