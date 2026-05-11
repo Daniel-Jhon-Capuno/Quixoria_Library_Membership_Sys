@@ -25,7 +25,7 @@
                         </div>
                         <div class="flex justify-between items-center">
                             <span class="text-slate-400">Price</span>
-                            <span class="text-cyan-400 font-bold text-2xl">₱{{ number_format($tier->monthly_fee, 2) }}/mo</span>
+                            <span class="text-cyan-400 font-bold text-2xl">₱{{ number_format($tierPrice ?? $tier->monthly_fee ?? 0, 2) }}/mo</span>
                         </div>
                         <div class="flex justify-between items-center">
                             <span class="text-slate-400">Borrow Limit</span>
@@ -136,7 +136,7 @@
             <p class="text-slate-300 mb-2">You are about to purchase:</p>
                 <div class="bg-slate-900/50 rounded-xl p-4 mb-6 border border-slate-700">
                 <div class="text-white font-bold text-lg">{{ $tier->name }}</div>
-                <div class="text-cyan-400 font-bold text-2xl">₱{{ number_format($tier->monthly_fee, 2) }}/month</div>
+                    <div class="text-cyan-400 font-bold text-2xl">₱{{ number_format($tierPrice ?? $tier->monthly_fee ?? 0, 2) }}/month</div>
             </div>
             <p class="text-slate-400 text-sm mb-6">Are you sure your billing information is correct? This will be submitted for admin review.</p>
                 <div class="flex flex-col md:flex-row gap-3">

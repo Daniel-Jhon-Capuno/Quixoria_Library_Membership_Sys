@@ -20,6 +20,7 @@ class PaymentController extends Controller
         try {
             $user = Auth::user();
             $tier = MembershipTier::findOrFail($tierId);
+            $tierPrice = (float) ($tier->monthly_fee ?? 0);
             $currentSubscription = $user->subscription;
 
             if ($currentSubscription) {
@@ -28,7 +29,7 @@ class PaymentController extends Controller
 
             $isUpgrade = $currentSubscription && $currentSubscription->membership_tier_id !== $tier->id;
 
-            return view('student.payment', compact('tier', 'currentSubscription', 'isUpgrade'));
+            return view('student.payment', compact('tier', 'tierPrice', 'currentSubscription', 'isUpgrade'));
         } catch (\Throwable $e) {
             Log::error('Failed to render student payment page', [
                 'tier_id' => $tierId,
@@ -56,6 +57,7 @@ class PaymentController extends Controller
 
             $user = Auth::user();
             $tier = MembershipTier::findOrFail($tierId);
+            $tierPrice = (float) ($tier->monthly_fee ?? 0);
             $currentSubscription = $user->subscription;
             if ($currentSubscription) {
                 $currentSubscription->loadMissing('membershipTier');
@@ -81,7 +83,7 @@ class PaymentController extends Controller
                 'membership_tier_id' => $tier->id,
                 'type' => $isUpgrade ? 'upgrade' : 'purchase',
                 'status' => 'pending',
-                'amount' => $tier->monthly_fee,
+                'amount' => $tierPrice,
                 'full_name' => $request->full_name,
                 'email' => $request->email,
                 'phone' => $request->phone,
@@ -99,7 +101,7 @@ class PaymentController extends Controller
                     'user_id' => $user->id,
                     'membership_tier_id' => $tier->id,
                     'status' => 'pending',
-                    'amount_paid' => $tier->monthly_fee,
+                    'amount_paid' => $tierPrice,
                     'starts_at' => now(),
                     'ends_at' => now()->addMonth(),
                 ]);
