@@ -6,6 +6,17 @@
     <div class="py-12">
         <div class="max-w-4xl mx-auto sm:px-6 lg:px-8">
 
+            @if ($errors->any())
+                <div class="bg-red-900/40 border border-red-600/50 rounded-2xl p-4 mb-6 text-red-300">
+                    <p class="font-bold mb-2">❌ Please fix the following errors:</p>
+                    <ul class="list-disc list-inside space-y-1">
+                        @foreach ($errors->all() as $error)
+                            <li>{{ $error }}</li>
+                        @endforeach
+                    </ul>
+                </div>
+            @endif
+
             @if($isUpgrade)
             <div class="bg-yellow-800/40 border border-yellow-600/50 rounded-2xl p-4 mb-6 text-yellow-300">
                 ⚠️ You are upgrading from <strong>{{ data_get($currentSubscription, 'membershipTier.name', 'your current plan') }}</strong> to <strong>{{ $tier->name }}</strong>. Your current subscription will be cancelled and you will need to visit the branch to claim your refund.
@@ -166,57 +177,40 @@
         }
         
         function submitPaymentForm(btn) {
-            const form = document.getElementById('paymentForm');
-            
-            if (!form) {
-                console.error('Payment form with id "paymentForm" not found on page');
-                alert('Form error. Please refresh the page and try again.');
-                return;
-            }
-
             try {
-                // Disable button and show loading state
+                const form = document.getElementById('paymentForm');
+                
+                if (!form) {
+                    console.error('Form with id paymentForm not found');
+                    alert('Form not found. Please refresh the page.');
+                    return false;
+                }
+
+                // Disable button to prevent double submission
                 btn.disabled = true;
-                const originalText = btn.innerHTML;
                 btn.innerHTML = 'Processing... ⏳';
                 btn.classList.add('opacity-80');
                 
-                // Validate form fields
-                if (!form.checkValidity()) {
-                    const event = new Event('submit', { bubbles: true, cancelable: true });
-                    form.dispatchEvent(event);
-                    btn.disabled = false;
-                    btn.innerHTML = originalText;
-                    btn.classList.remove('opacity-80');
-                    return;
-                }
-
-                // Add a small delay to ensure UI updates are visible
-                setTimeout(() => {
-                    form.submit();
-                }, 200);
+                // Submit the form directly
+                console.log('Submitting form to:', form.action);
+                form.submit();
+                
+                return false;
                 
             } catch (e) {
-                console.error('Payment submission error:', e);
+                console.error('Form submission error:', e);
+                alert('Error: ' + e.message);
                 btn.disabled = false;
                 btn.innerHTML = 'Confirm Payment';
                 btn.classList.remove('opacity-80');
-                alert('Error submitting payment. Please try again or contact support.');
+                return false;
             }
         }
 
-        // Close modal when Escape key is pressed
+        // Close modal with Escape key
         document.addEventListener('keydown', function(event) {
             if (event.key === 'Escape') {
                 closeConfirmModal();
-            }
-        });
-
-        // Prevent double submissions
-        document.addEventListener('submit', function(e) {
-            const btn = e.target.querySelector('[type="submit"]');
-            if (btn && !btn.disabled) {
-                btn.disabled = true;
             }
         });
     </script>
