@@ -1,0 +1,21 @@
+services:
+  - type: web
+    name: quixoria
+    runtime: php
+    plan: free
+    buildCommand: |
+      composer install --no-interaction --prefer-dist
+      npm install
+      npm run build
+    startCommand: php -S localhost:8080 public/index.php
+    envVars:
+      - key: APP_ENV
+        value: production
+      - key: APP_DEBUG
+        value: false
+      - key: COMPOSER_ALLOW_SUPERUSER
+        value: 1
+    postDeployCommand: |
+      php artisan migrate --force
+      php artisan view:clear
+      php artisan config:cache
