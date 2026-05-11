@@ -45,19 +45,31 @@ class PaymentController extends Controller
     public function store(Request $request, $tierId)
     {
         try {
-            $request->validate([
-                'full_name' => 'required|string|max:255',
-                'email' => 'required|email|max:255',
-                'phone' => 'required|string|max:20',
-                'address' => 'required|string|max:500',
-                'payment_method' => 'required|in:gcash,maya,bank_transfer',
-                'reference_number' => 'required|string|max:100',
-                'proof_of_payment' => 'nullable|image|max:5120',
-            ]);
+            // Step 1: Validate input
+            try {
+                $request->validate([
+                    'full_name' => 'required|string|max:255',
+                    'email' => 'required|email|max:255',
+                    'phone' => 'required|string|max:20',
+                    'address' => 'required|string|max:500',
+                    'payment_method' => 'required|in:gcash,maya,bank_transfer',
+                    'reference_number' => 'required|string|max:100',
+                    'proof_of_payment' => 'nullable|image|max:5120',
+                ]);
+            } catch (\Illuminate\Validation\ValidationException $e) {
+                Log::info('Payment validation failed', ['errors' => $e->errors()]);
+                throw $e;
+            }
 
+            // Step 2: Get user and tier
             $user = Auth::user();
+            if (!$user) {
+                throw new \Exception('User not authenticated');
+            }
+            
             $tier = MembershipTier::findOrFail($tierId);
             $tierPrice = (float) ($tier->monthly_fee ?? 0);
+            
             $currentSubscription = $user->subscription;
             if ($currentSubscription) {
                 $currentSubscription->loadMissing('membershipTier');
@@ -66,36 +78,47 @@ class PaymentController extends Controller
             $isUpgrade = $currentSubscription && $currentSubscription->membership_tier_id !== $tier->id;
             $oldTierName = $isUpgrade ? data_get($currentSubscription, 'membershipTier.name') : null;
 
-            // Handle file upload
+            // Step 3: Handle file upload
             $proofPath = null;
-            if ($request->hasFile('proof_of_payment')) {
-                $proofPath = $request->file('proof_of_payment')->store('payment-proofs', 'public');
+            try {
+                if ($request->hasFile('proof_of_payment')) {
+                    $proofPath = $request->file('proof_of_payment')->store('payment-proofs', 'public');
+                    Log::info('File uploaded successfully', ['path' => $proofPath]);
+                }
+            } catch (\Exception $e) {
+                Log::warning('File upload failed, continuing without proof', ['error' => $e->getMessage()]);
+                $proofPath = null;
             }
 
-            // Cancel current subscription if upgrading
+            // Step 4: Cancel current subscription if upgrading
             if ($isUpgrade) {
                 $currentSubscription->update(['status' => 'cancelled']);
+                Log::info('Cancelled previous subscription', ['sub_id' => $currentSubscription->id]);
             }
 
-            // Create payment record
-            $payment = Payment::create([
-                'user_id' => $user->id,
-                'membership_tier_id' => $tier->id,
-                'type' => $isUpgrade ? 'upgrade' : 'purchase',
-                'status' => 'pending',
-                'amount' => $tierPrice,
-                'full_name' => $request->full_name,
-                'email' => $request->email,
-                'phone' => $request->phone,
-                'address' => $request->address,
-                'payment_method' => $request->payment_method,
-                'reference_number' => $request->reference_number,
-                'proof_of_payment' => $proofPath,
-            ]);
+            // Step 5: Create payment record
+            try {
+                $payment = Payment::create([
+                    'user_id' => $user->id,
+                    'membership_tier_id' => $tier->id,
+                    'type' => $isUpgrade ? 'upgrade' : 'purchase',
+                    'status' => 'pending',
+                    'amount' => $tierPrice,
+                    'full_name' => $request->full_name,
+                    'email' => $request->email,
+                    'phone' => $request->phone,
+                    'address' => $request->address,
+                    'payment_method' => $request->payment_method,
+                    'reference_number' => $request->reference_number,
+                    'proof_of_payment' => $proofPath,
+                ]);
+                Log::info('Payment created successfully', ['payment_id' => $payment->id]);
+            } catch (\Exception $e) {
+                Log::error('Failed to create payment record', ['error' => $e->getMessage()]);
+                throw new \Exception('Failed to create payment: ' . $e->getMessage());
+            }
 
-            // Create a pending subscription record so admins see it in the Subscriptions -> Pending inbox
-            // and link the payment to the subscription. This allows admins to review the subscription
-            // along with the payment evidence in one place.
+            // Step 6: Create pending subscription
             try {
                 $subscription = Subscription::create([
                     'user_id' => $user->id,
@@ -105,17 +128,14 @@ class PaymentController extends Controller
                     'starts_at' => now(),
                     'ends_at' => now()->addMonth(),
                 ]);
-
                 $payment->update(['subscription_id' => $subscription->id]);
-            } catch (\Throwable $e) {
-                // If creating the subscription fails, log but continue so payment isn't lost.
-                Log::error('Failed to create pending subscription for payment', [
-                    'payment_id' => $payment->id ?? null,
-                    'error' => $e->getMessage(),
-                ]);
+                Log::info('Subscription created successfully', ['subscription_id' => $subscription->id]);
+            } catch (\Exception $e) {
+                Log::error('Failed to create pending subscription', ['error' => $e->getMessage()]);
+                // Don't fail - payment is more important
             }
 
-            // Notify admins and student, but never let notification failure break purchase flow.
+            // Step 7: Send notifications
             try {
                 $admins = \App\Models\User::where('role', 'admin')->get();
                 if ($admins->isNotEmpty()) {
@@ -125,17 +145,18 @@ class PaymentController extends Controller
                 if ($isUpgrade) {
                     $user->notifyNow(new UpgradeRefundNotification($payment, $oldTierName));
                 }
-            } catch (\Throwable $e) {
-                Log::warning('Subscription payment notification failed', [
-                    'payment_id' => $payment->id,
-                    'user_id' => $user->id,
-                    'error' => $e->getMessage(),
-                ]);
+                Log::info('Notifications sent successfully');
+            } catch (\Exception $e) {
+                Log::warning('Notification failed', ['error' => $e->getMessage()]);
+                // Don't fail on notification errors
             }
 
+            Log::info('Payment submission completed successfully', ['payment_id' => $payment->id]);
+            
             return redirect()->route('student.payment.receipt', $payment->id)
                 ->with('success', 'Payment submitted! Admin will verify and activate your subscription shortly.');
-        } catch (\Throwable $e) {
+                
+        } catch (\Exception $e) {
             Log::error('Student payment submission failed', [
                 'tier_id' => $tierId,
                 'user_id' => Auth::id(),
@@ -143,14 +164,9 @@ class PaymentController extends Controller
                 'trace' => $e->getTraceAsString(),
             ]);
 
-            // Show actual error in development, generic error in production
-            $errorMessage = config('app.debug') 
-                ? 'Payment error: ' . $e->getMessage()
-                : 'We could not process your payment request right now. Please try again.';
-
             return back()
                 ->withInput()
-                ->withErrors(['error' => $errorMessage]);
+                ->withErrors(['error' => 'Payment Error: ' . $e->getMessage()]);
         }
     }
 
