@@ -130,7 +130,7 @@
     </div>
 
     <!-- Confirmation Modal -->
-    <div id="confirmModal" class="fixed inset-0 bg-black bg-opacity-60 hidden items-center justify-center z-50">
+    <div id="confirmModal" style="display: none;" class="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50">
         <div class="bg-slate-800 rounded-2xl p-8 max-w-md md:w-96 w-full mx-4 md:mx-auto border border-slate-700 shadow-2xl">
             <h3 class="text-xl font-bold text-white mb-4">Confirm Payment</h3>
             <p class="text-slate-300 mb-2">You are about to purchase:</p>
@@ -152,25 +152,72 @@
 
     <script>
         function openConfirmModal() {
-            document.getElementById('confirmModal').classList.remove('hidden');
-            document.getElementById('confirmModal').classList.add('flex');
-        }
-        function closeConfirmModal() {
-            document.getElementById('confirmModal').classList.add('hidden');
-            document.getElementById('confirmModal').classList.remove('flex');
-        }
-        function submitPaymentForm(btn) {
-            try {
-                btn.disabled = true;
-                btn.innerHTML = 'Submitting...';
-                // add subtle visual feedback
-                btn.classList.add('opacity-80');
-                document.getElementById('paymentForm').submit();
-            } catch (e) {
-                btn.disabled = false;
-                btn.innerHTML = 'Confirm Payment';
-                alert('Failed to submit the form. Please try again.');
+            const modal = document.getElementById('confirmModal');
+            if (modal) {
+                modal.style.display = 'flex';
             }
         }
+        
+        function closeConfirmModal() {
+            const modal = document.getElementById('confirmModal');
+            if (modal) {
+                modal.style.display = 'none';
+            }
+        }
+        
+        function submitPaymentForm(btn) {
+            const form = document.getElementById('paymentForm');
+            
+            if (!form) {
+                console.error('Payment form with id "paymentForm" not found on page');
+                alert('Form error. Please refresh the page and try again.');
+                return;
+            }
+
+            try {
+                // Disable button and show loading state
+                btn.disabled = true;
+                const originalText = btn.innerHTML;
+                btn.innerHTML = 'Processing... ⏳';
+                btn.classList.add('opacity-80');
+                
+                // Validate form fields
+                if (!form.checkValidity()) {
+                    const event = new Event('submit', { bubbles: true, cancelable: true });
+                    form.dispatchEvent(event);
+                    btn.disabled = false;
+                    btn.innerHTML = originalText;
+                    btn.classList.remove('opacity-80');
+                    return;
+                }
+
+                // Add a small delay to ensure UI updates are visible
+                setTimeout(() => {
+                    form.submit();
+                }, 200);
+                
+            } catch (e) {
+                console.error('Payment submission error:', e);
+                btn.disabled = false;
+                btn.innerHTML = 'Confirm Payment';
+                btn.classList.remove('opacity-80');
+                alert('Error submitting payment. Please try again or contact support.');
+            }
+        }
+
+        // Close modal when Escape key is pressed
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape') {
+                closeConfirmModal();
+            }
+        });
+
+        // Prevent double submissions
+        document.addEventListener('submit', function(e) {
+            const btn = e.target.querySelector('[type="submit"]');
+            if (btn && !btn.disabled) {
+                btn.disabled = true;
+            }
+        });
     </script>
 </x-app-layout>

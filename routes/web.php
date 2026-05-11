@@ -148,10 +148,10 @@ Route::middleware(['auth', 'role:student'])->prefix('student')->name('student.')
     Route::post('subscription/downgrade', [StudentSubscriptionController::class, 'downgrade'])->name('subscription.downgrade');
     Route::delete('subscription/cancel', [StudentSubscriptionController::class, 'cancel'])->name('subscription.cancel');
     Route::post('reservations', [ReservationController::class, 'store'])->name('reservations.store');
-    // Student payment routes
+    // Student payment routes - Receipt route MUST come before parameterized routes to avoid route matching issues
+    Route::get('payment/receipt/{paymentId}', [\App\Http\Controllers\Student\PaymentController::class, 'receipt'])->name('payment.receipt');
     Route::get('payment/{tierId}', [\App\Http\Controllers\Student\PaymentController::class, 'show'])->name('payment.show');
     Route::post('payment/{tierId}', [\App\Http\Controllers\Student\PaymentController::class, 'store'])->name('payment.store');
-    Route::get('payment/receipt/{paymentId}', [\App\Http\Controllers\Student\PaymentController::class, 'receipt'])->name('payment.receipt');
 });
 
 Route::middleware('auth')->group(function () {

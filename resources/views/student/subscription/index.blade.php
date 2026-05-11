@@ -118,7 +118,17 @@
                                 <button disabled class="w-full px-4 py-3 sm:px-6 sm:py-4 bg-gradient-to-r from-amber-600 to-amber-700 text-white font-bold rounded-xl shadow-xl cursor-not-allowed text-sm sm:text-lg">
                                     ⏳ Pending Approval
                                 </button>
+                                @elseif($tier->monthly_fee == 0)
+                                {{-- Basic (Free) tier and not current --}}
+                                <form method="POST" action="{{ route('student.subscription.purchase') }}" class="confirm-subscription" data-confirm="Switch to '{{ $tier->name }}' (Free)? Purchasing this tier replaces your previous subscription and no refund will be provided. Continue?">
+                                    @csrf
+                                    <input type="hidden" name="tier_id" value="{{ $tier->id }}">
+                                    <button type="submit" class="w-full px-4 py-3 sm:px-8 sm:py-4 bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white font-bold rounded-xl shadow-xl hover:shadow-2xl transform hover:scale-[1.02] transition-all duration-300 text-sm sm:text-lg">
+                                        Switch to Free
+                                    </button>
+                                </form>
                                 @else
+                                {{-- Premium or other tiers --}}
                                 @php
                                     $isDowngrade = $currentTierId && $currentSubscription && $currentSubscription->membershipTier->monthly_fee > $tier->monthly_fee;
                                     $buttonText = $isDowngrade ? 'Return to ' . $tier->name : ($currentTierId ? 'Upgrade to ' . $tier->name : 'Purchase ' . $tier->name);
@@ -126,15 +136,6 @@
                                 <a href="{{ route('student.payment.show', $tier->id) }}" class="confirm-subscription-link w-full block px-4 py-3 sm:px-8 sm:py-4 bg-gradient-to-r from-cyan-500 to-blue-600 text-white font-bold rounded-xl shadow-xl hover:shadow-2xl hover:shadow-cyan-500/30 transform hover:scale-[1.02] transition-all duration-300 text-sm sm:text-lg text-center group-hover:from-cyan-400 group-hover:to-blue-500" data-confirm="Purchase '{{ $tier->name }}'? Purchasing this tier replaces your previous subscription and no refund will be provided. Continue?">
                                     {{ $buttonText }}
                                 </a>
-                            @endif
-                            @if($tier->monthly_fee == 0)
-                                <form method="POST" action="{{ route('student.subscription.purchase') }}" class="confirm-subscription" data-confirm="Switch to '{{ $tier->name }}' (Free)? Purchasing this tier replaces your previous subscription and no refund will be provided. Continue?">
-                                    @csrf
-                                    <input type="hidden" name="tier_id" value="{{ $tier->id }}">
-                                    <button type="submit" class="w-full mt-3 px-4 py-3 sm:px-8 sm:py-4 bg-gradient-to-r from-emerald-500 to-emerald-600 text-white font-bold rounded-xl shadow-xl hover:shadow-2xl transform hover:scale-[1.02] transition-all duration-300 text-sm sm:text-lg">
-                                        {{ $currentTierId == $tier->id ? 'Current Plan' : 'Switch to Free' }}
-                                    </button>
-                                </form>
                             @endif
                         </div>
                     </div>
